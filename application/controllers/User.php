@@ -183,12 +183,7 @@ public function new_siv() {
             $siv_data['date_of_issue'] = $this->input->post('date_of_issue');
             $siv_data['no_of_components'] = $this->input->post('no_of_components');
             $siv_data['entered_by'] = $this->session->userdata('user_name');
-            //echo $siv_no;
-            //echo $no_of_components;
-            //print_r($component_type);
-            //print_r($component_name);
-            //print_r($date_of_expiry);
-            //print_r($component_quantity);
+
             
 
             for($i = 0; $i < $siv_data['no_of_components']; $i++){
