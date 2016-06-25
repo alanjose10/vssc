@@ -18,8 +18,8 @@
                     <div class="box-header">
                         <h3 class="box-title"> Verifier Details</h3>
                     </div>
-                    <div class="box-body no-padding table-responsive">
-                        <table class="table table-hover table-bordered">
+                    <div class="box-body table-responsive">
+                        <table class="table table-hover table-striped table-bordered">
                             <tr class="bg-red">
                                 <th>ID</th>
                                 <th>Name</th>
@@ -36,7 +36,7 @@
                                         <td>".$row['user_name']."</td>
                                         <td>".$row['last_active_date']."</td>
                                         <td>".$row['join_date']."</td>
-                                        <td ><a class=\"text-danger\" href=\"".base_url().'admin/remove_verifier/'.$row['user_id']."\">Remove Verifier</a></td>
+                                        <td ><a class=\"btn col-xs-offset-5 text-danger\" href=\"".base_url().'admin/remove_verifier/'.$row['user_id']."\"><i class=\"glyphicon glyphicon-trash\"></i></a></td>
                                     </tr>";
                             }
                             ?>    

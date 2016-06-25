@@ -60,7 +60,7 @@
                                     }
                                     
                                 }
-                                echo "<td><a href = \"".base_url().'admin/delete_from_master_inventory/'.$type."/".$row['component_type']."/".$row['component_name']."\" onclick=\"return confirm('Are you sure you want to delete this item?')\"><i class=\"glyphicon glyphicon-trash\"></i></a></td>";
+                                echo "<td><a class=\"text-danger\" href = \"".base_url().'admin/delete_from_master_inventory/'.$type."/".$row['component_type']."/".$row['component_name']."\" onclick=\"return confirm('Are you sure you want to delete this item?')\"><i class=\"glyphicon glyphicon-trash\"></i></a></td>";
                                 echo "</tr>";
                             }
                             ?>
