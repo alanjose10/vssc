@@ -202,7 +202,7 @@ public function new_siv() {
                 $title = "SIV_".$siv_data['siv_no'];
                 $this->insert_into_calendar($title, date("Y-m-d") , 'siv_entered');
                 //$this->print_success("SIV Successfully Entered.");
-                redirect('user/print_success/SIV Successfully Entered.');
+                redirect('user/print_success/SIV_Successfully_Entered.');
             }
             
             else{
