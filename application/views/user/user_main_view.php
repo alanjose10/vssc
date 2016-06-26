@@ -184,17 +184,13 @@
         <li class="treeview">
           <a href="#">
             <i class="fa fa-refresh"></i>
+            <i class="pull-right fa fa-angle-right"></i>
             <span>Re-Screen #</span>
-            <i class="fa fa-angle-right pull-right"></i>
           </a>
-          <ul class="treeview-menu">
-            <?php     //rescreen
-          if($this->session->userdata('rescreen') == 1){
-              echo "<li><a href=\"".base_url()."user/????\"><i class=\"fa fa-circle-o\"></i>To Rescreen #</a></li>\n";
-          }        
-            ?>
-            <li><a href="#"><i class="fa fa-circle-o"></i> ReScreen Status #</a></li>
-          </ul>
+            <ul class="treeview-menu">
+                <li><a href="<?php echo base_url().'user/get_rescreens_for_user'; ?>"><i class="fa fa-circle-o"></i>Pending Re-Screens</a></li>
+                <li><a href="<?php echo base_url().'user/???'; ?>"><i class="fa fa-circle-o"></i>Completed Re-Screens</a></li>
+            </ul>
         </li>
         <li>
           <a href="<?php echo base_url().'user/calendar'; ?>">
@@ -217,7 +213,10 @@
             <i class=\"fa fa-angle-right pull-right\"></i>
           </a>
           <ul class=\"treeview-menu\">
-            <li><a href=\"#\"><i class=\"fa fa-circle-o\"></i> Approved BOMs</a></li>
+            <li><a href=\"".base_url()."user/store_officer_approved_boms_list\"><i class=\"fa fa-circle-o\"></i> Approved BOMs</a></li>
+          </ul>
+          <ul class=\"treeview-menu\">
+            <li><a href=\"".base_url()."user/store_officer_approved_boms_list\"><i class=\"fa fa-circle-o\"></i> Delivered BOMs</a></li>
           </ul>
         </li>";
           

@@ -168,11 +168,29 @@
             </ul>
         </li>
         <li class="treeview">
-          <a href="<?php echo base_url().'verifier/pending_rescreen'; ?>">
+          <a href="#">
             <i class="fa fa-refresh"></i>
             <i class="pull-right fa fa-angle-right"></i>
             <span>Re-Screen #</span>
           </a>
+            <ul class="treeview-menu">
+                
+                <li>
+                  <a href="#"><i class="fa fa-circle-o"></i>To Re-screen<i class="fa fa-angle-right pull-right"></i></a>
+                  <ul class="treeview-menu">
+                    <li><a href="<?php echo base_url().'verifier/get_components_for_rescreen/EM'; ?>"><i class="fa fa-circle-o"></i>Engineering Grade</a></li>
+                    <li><a href="<?php echo base_url().'verifier/get_components_for_rescreen/FM'; ?>"><i class="fa fa-circle-o"></i>Flight Grade</a></li>
+                  </ul>
+                </li>
+                <li>
+                  <a href="#"><i class="fa fa-circle-o"></i>Re-Screen Over<i class="fa fa-angle-right pull-right"></i></a>
+                  <ul class="treeview-menu">
+                    <li><a href="#"><i class="fa fa-circle-o"></i>Engineering Grade</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i>Flight Grade</a></li>
+                    
+                  </ul>
+                </li>
+            </ul>
         </li>
         <li>
           <a href="<?php echo base_url().'verifier/calendar'; ?>">

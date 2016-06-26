@@ -128,13 +128,15 @@ class Admin extends CI_Controller {
                     else {
                         if($this->model_admin->add_user('user')){
                            // $this->get_session_details();
-                            $this->print_success("User successfully added.");
+                            //$this->print_success("User successfully added.");
+                            redirect('admin/print_success/User_successfully_added.');
                             
                             //added successfully
                         }
                         else {
                             //$this->get_session_details();
-                            $this->print_error("Error while adding the user! Please try again.");
+                            //$this->print_error("Error while adding the user! Please try again.");
+                            redirect('admin/print_error/Error_while_adding_the_user!_Please_try_again.');
                         }
                     }
                 } 
@@ -154,10 +156,12 @@ class Admin extends CI_Controller {
         $this->login();
         }
         if($this->model_admin->remove_user($user_id)){
-            $this->print_success("User Removed Successfully.");
+            //$this->print_success("User Removed Successfully.");
+            redirect('admin/print_success/User_Removed_Successfully.');
         }
         else{
-            $this->print_error("Error!. Failed to Remove User.");
+            //$this->print_error("Error!. Failed to Remove User.");
+            redirect('admin/print_error/Error!._Failed_to_Remove User.');
         }
     }
     
@@ -238,11 +242,13 @@ class Admin extends CI_Controller {
             //echo $user_id;
             if($this->model_admin->update_privilege($user_id, $new_priv)){
                 //$this->get_session_details();
-                $this->print_success("User Privilege Successfully Updated.");
+                //$this->print_success("User Privilege Successfully Updated.");
+                redirect('admin/print_success/User_Privilege_Successfully_Updated.');
             }
             else {
                 //$this->get_session_details();
                 $this->print_error("Error while updating user privilege! Please try again.");
+                redirect('admin/print_error/Error_while_updating_user_privilege!_Please_try_again.');
             }
             
         }
@@ -271,12 +277,14 @@ class Admin extends CI_Controller {
                         else {
                             if($this->model_admin->add_verifier()){
                                 //$this->get_session_details();
-                                $this->print_success("Verifier successfully added.");
+                                //$this->print_success("Verifier successfully added.");
+                                redirect('admin/print_success/Verifier_Successfully_Added.');
 
                                 //added successfully
                             }
                             else {
-                                $this->print_error("Error while adding the Verifier! Please try again.");
+                                //$this->print_error("Error while adding the Verifier! Please try again.");
+                                redirect('admin/print_error/Error_while_adding_the_Verifier!_Please_try_again.');
                             }
                         }
                     } 
@@ -296,7 +304,8 @@ class Admin extends CI_Controller {
         $this->login();
         }
         if($this->model_admin->remove_verifier($user_id)){
-            $this->print_success("Verifier Removed Successfully.");
+            //$this->print_success("Verifier Removed Successfully.");
+            redirect('admin/print_success/Verifier_Removed_Successfully.');
         }
         else{
             $this->print_error("Error!. Failed to Remove Verifier.");
@@ -342,7 +351,8 @@ class Admin extends CI_Controller {
     
     public function delete_from_master_inventory($type, $component_type, $component_name){
         if($this->model_admin->delete_component_from_master($type, $component_type, $component_name)){
-          $this->print_success("Component Deleted Successfully.");  
+            //$this->print_success("Component Deleted Successfully.");  
+            redirect('admin/print_success/Component_Deleted_Successfully.');
         }
         else{
             $this->print_error("Error!. Failed to Delete Component.");
@@ -391,6 +401,7 @@ class Admin extends CI_Controller {
         $component_details = $this->model_admin->get_components_of_siv($siv_table_name);
         //print_r($component_details);
         //print_r($bom_details);
+        $siv_details['date_of_issue'] = preg_replace("!([0-9]{4})-([0-9]{2})-([0123][0-9])!", "$3/$2/$1", $siv_details['date_of_issue']);         //yyyy-mm-dd -> dd/mm/yyyy
         $this->page_data['siv_details'] = $siv_details;
         $this->page_data['component_details'] = $component_details;
         if(isset($this->page_data['page_content'])){
@@ -596,7 +607,8 @@ class Admin extends CI_Controller {
         if($this->model_admin->create_bom($bom_details, $file_data_new, $table_name)){
             //$this->get_session_details();
             $this->insert_into_calendar($table_name, date("Y-m-d") , 'bom_created');
-            $this->print_success("BOM Successfully Created.");
+            //$this->print_success("BOM Successfully Created.");
+            redirect('admin/print_success/BOM_Successfully_Created.');
         }
         else{
             //$this->get_session_details();
@@ -655,6 +667,15 @@ class Admin extends CI_Controller {
         $this->load->view('admin/admin_main_view',$this->page_data);
     }
     
+    public function download_uploaded_file($file_name){
+        if(!$this->session->userdata('user_status')){
+        $this->login();
+        }
+        $this->load->helper('download');
+        $data = file_get_contents("./uploads/".$file_name);
+        force_download($file_name, $data);
+    }
+    
     public function view_full_bom($bom_no) {
         if(!$this->session->userdata('user_status')){
         $this->login();
@@ -689,7 +710,8 @@ class Admin extends CI_Controller {
     
     public function delete_uploaded_bom($bom_no){    
             if($this->model_admin->delete_uploaded_bom($bom_no)){
-                $this->print_success("BOM Successfully Deleted.");
+                //$this->print_success("BOM Successfully Deleted.");
+                redirect('admin/print_success/BOM_Successfully_Deleted.');
             }
             else {
                 $this->print_error("BOM Delete Failed!");
@@ -739,7 +761,8 @@ class Admin extends CI_Controller {
     
     public function delete_assembled_bom($bom_no){    
             if($this->model_admin->delete_assembled_bom($bom_no)){
-                $this->print_success("BOM Successfully Deleted.");
+                //$this->print_success("BOM Successfully Deleted.");
+                redirect('admin/print_success/BOM_Successfully_Deleted.');
             }
             else {
                 $this->print_error("BOM Delete Failed!");
@@ -750,6 +773,8 @@ class Admin extends CI_Controller {
     
     
     
+    
+    //*******************CALENDAR*******************
     
     
     

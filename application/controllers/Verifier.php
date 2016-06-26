@@ -27,6 +27,7 @@ class Verifier extends CI_Controller {
     
     
     public function login_validation() {
+        
             if($this->input->post()){             
                 $this->form_validation->set_rules('username', 'Username', 'required');
                 $this->form_validation->set_rules('password', 'Password', 'required'); 
@@ -34,8 +35,8 @@ class Verifier extends CI_Controller {
                     $this->load->view("login");
                 }
                 else{
-                    if($this->model_verifier->login()){                        
-                        $this->dashboard();
+                    if($this->model_verifier->login()){
+                        redirect('verifier/dashboard');
                     }
                     else{
                         $data = array(
@@ -75,8 +76,8 @@ class Verifier extends CI_Controller {
     
     public function dashboard() {
         $this->page_data["pending_approval_siv_no"] = $this->model_verifier->get_no_of_siv('PENDING_APPROVAL');
-        $this->page_data["approved_siv_no"] = $this->model_verifier->get_no_of_bom('APPROVED');
-        $this->page_data["rejected_siv_no"] = $this->model_verifier->get_no_of_bom('REJECTED');
+        $this->page_data["approved_siv_no"] = $this->model_verifier->get_no_of_siv('APPROVED');
+        $this->page_data["rejected_siv_no"] = $this->model_verifier->get_no_of_siv('REJECTED');
         $this->page_data["pending_approval_bom_no"] = $this->model_verifier->get_no_of_bom('PENDING_APPROVAL');
         $this->page_data["approved_bom_no"] = $this->model_verifier->get_no_of_bom('APPROVED');
         $this->page_data["rejected_bom_no"] = $this->model_verifier->get_no_of_bom('REJECTED');
@@ -153,7 +154,8 @@ class Verifier extends CI_Controller {
         if($this->model_verifier->insert_approved_siv($siv_details, $component_details)){
             if($this->model_verifier->change_siv_status($siv_no, 'APPROVED')){
                 $this->insert_into_calendar("SIV_".$siv_no, date("Y-m-d") , 'siv_approved');
-                $this->print_success("SIV Approved Successfully.");
+                redirect('verifier/print_success/SIV_Approved_Successfully.');
+                //$this->print_success("SIV Approved Successfully.");
             }
         }
         else{
@@ -167,7 +169,8 @@ class Verifier extends CI_Controller {
         }
         if($this->model_verifier->change_siv_status($siv_no, 'REJECTED')){
                 $this->insert_into_calendar("SIV_".$siv_no, date("Y-m-d") , 'siv_rejected');
-                $this->print_success("SIV Rejected.");
+                //$this->print_success("SIV Rejected.");
+                redirect('verifier/print_success/SIV_Rejected.');
             }
         else{
             $this->print_success("Failed to Reject SIV.");
@@ -251,7 +254,8 @@ class Verifier extends CI_Controller {
         if($this->model_verifier->reserve_approved_bom($bom_details, $component_details)){
             if($this->model_verifier->change_bom_status($bom_no, 'APPROVED')){
                 $this->insert_into_calendar("BOM_".$bom_no, date("Y-m-d") , 'bom_approved');
-                $this->print_success("BOM Approved Successfully.");
+                //$this->print_success("BOM Approved Successfully.");
+                redirect('verifier/print_success/BOM_Approved_Successfully.');
             }
         }
         else{
@@ -266,7 +270,8 @@ class Verifier extends CI_Controller {
         }
         if($this->model_verifier->change_bom_status($bom_no, 'REJECTED')){
                 $this->insert_into_calendar("BOM_".$bom_no, date("Y-m-d") , 'bom_rejected');
-                $this->print_success("BOM Rejected.");
+                redirect('verifier/print_success/BOM_Rejected.');
+                //$this->print_success("BOM Rejected.");
             }
         else{
             $this->print_success("Failed to Reject BOM.");
@@ -291,7 +296,6 @@ class Verifier extends CI_Controller {
         }
         $this->load->view('verifier/verifier_print_assembled_bom',$this->page_data);
         
-        
     }
     
     
@@ -305,6 +309,58 @@ class Verifier extends CI_Controller {
     
     
     //************RESCREEN****************
+    
+    public function get_components_for_rescreen($type){
+        if(!$this->session->userdata('user_status')){
+        $this->login();
+        }
+        $this->page_data['rescreen_components'] = $this->model_verifier->get_components_for_rescreen($type);
+        $this->page_data['users'] = $this->model_verifier->get_users('user');
+        if(isset($this->page_data['page_content'])){
+            unset($this->page_data['page_content']);
+        }
+        $this->page_data["page_content"] = $this->load->view('verifier/verifier_to_rescreen_list_view',$this->page_data,TRUE);
+        $this->load->view('verifier/verifier_main_view',$this->page_data);
+    }
+    
+    public function assign_rescreen(){
+        $data = $this->input->post();
+        echo "<pre>";
+        print_r($data);
+        echo "</pre>";
+        $sl_no = $this->input->post('sl_no');
+        $sl_no = $sl_no - 1;
+        $rescreen_array = array(
+                                'grade' => $data['grade'][$sl_no],
+                                'component_type' => $data['component_type'][$sl_no],
+                                'component_name' => $data['component_name'][$sl_no],
+                                'date_of_expiry' => $data['date_of_expiry'][$sl_no],
+                                'component_quantity' => $data['component_quantity'][$sl_no],
+                                'assigned_user' => $this->input->post('assigned_user')
+                                    );
+        
+        
+        echo "<pre>";
+        print_r($rescreen_array);
+        echo "</pre>";
+        
+        if($this->model_verifier->send_for_rescreen($rescreen_array)){
+            redirect('verifier/print_success/Re-Screen_Assigned_Successfully');
+        }
+        else{
+            $this->print_error("Error! Failed To Assign Re-Screen.");
+        }
+        
+        
+    }
+    
+    public function get_completed_rescreens(){
+        
+        //ajbsxjhasbx
+        
+    }
+    
+    
     
     
     

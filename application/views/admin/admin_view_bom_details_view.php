@@ -84,9 +84,9 @@
 
       <!-- Table row -->
       <div class="row">
-        <div class="col-xs-12 table-responsive">
-          <table class="table table-striped">
-            <thead>
+        <div class="col-xs-12  table-responsive">
+          <table class="table table-bordered table-hover table-striped">
+            <thead class="bg-gray">
             <tr>
               <th>Component No.</th>
               <th>Component Type</th>
@@ -121,11 +121,8 @@
          
           
         </div>
-        <div class="col-xs-4 col-xs-offset-1">
-          <a href="#" class="btn btn-default btn-primary"><i class="fa fa-file-excel-o"></i> Save As Excel</a>
-            
-        </div>
-        <div class="col-xs-2">
+
+        <div class="col-xs-2 col-xs-offset-5">
           <a href="<?php echo base_url().'admin/delete_uploaded_bom/'.$bom_details['bom_no']; ?>" class="btn btn-danger pull-right"><i class="fa fa-delete"></i> Delete</a>
         </div>
       </div>

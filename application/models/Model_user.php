@@ -521,7 +521,16 @@ class Model_user extends CI_Model {
     return false;
     }
     
-    
+    public function change_bom_status($bom_no, $new_status) {
+        $this->db->set('bom_status', $new_status);
+        $this->db->where('bom_no', $bom_no);
+        if($this->db->update('bom_status')){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
     
     
     
@@ -589,6 +598,221 @@ class Model_user extends CI_Model {
         $result = $query->result();
         return $result;
     }
+    
+    
+    
+    
+    //************STORE OFFICER*****************
+    
+    
+    public function get_approved_assembled_bom(){
+        $this->db->where('bom_status', 'APPROVED');
+        $query = $this->db->get('bom_status');
+        $result = $query->result_array();
+        return $result;
+        
+    }
+    
+    
+    
+    public function update_db_after_delivery($bom_details, $component_details, $delivered_quantity){
+        $new_component_details = array();
+        $date_keys = array();
+        $no_of_components = sizeof($component_details);
+        for($i = 0; $i < $no_of_components; $i++){
+            $new_component_details_row = array(
+                                                    'component_type' => $component_details[$i]['component_type'],
+                                                    'component_name' => $component_details[$i]['component_name'],
+                                                    'required_quantity' => $component_details[$i]['required_quantity'],
+                                                    'issued_quantity' => $component_details[$i]['issued_quantity'],
+                                                    'delivered_quantity' => $delivered_quantity[$i]
+                                                        );
+            if(($component_details[$i]['issued_quantity'] > $delivered_quantity[$i])){
+                $update_db_row = array(
+                                                    'component_type' => $component_details[$i]['component_type'],
+                                                    'component_name' => $component_details[$i]['component_name'],
+                                                        );
+                $len = sizeof($component_details[$i]);
+                $keys = array_keys($component_details[$i]);
+                ksort($keys);
+                for($j = 4; $j < $len; $j++){
+                        $date_keys[] = $keys[$j];
+                    }
+                
+                if($delivered_quantity[$i] < $component_details[$i]['issued_quantity']){        //always true?
+                    $add_to_db = $component_details[$i]['issued_quantity'] - $delivered_quantity[$i];
+
+                    for($j = 0; $j < $len-4; $j++){
+                        if($add_to_db == 0){     //no quantity to put back again
+                            $new_component_details_row[$date_keys[$j]] = $component_details[$i][$date_keys[$j]];
+                        }
+                        else{               //there are components to put back into db
+                            if(($add_to_db >= $component_details[$i][$date_keys[$j]]) && $add_to_db != 0){    
+                                $new_component_details_row[$date_keys[$j]] = 0;
+                                if($component_details[$i][$date_keys[$j]] > 0){
+                                    $update_db_row[$date_keys[$j]] = $component_details[$i][$date_keys[$j]];
+                                }
+                                $add_to_db = $add_to_db - $component_details[$i][$date_keys[$j]];
+                            }
+                            else if(($add_to_db < $component_details[$i][$date_keys[$j]]) && $add_to_db != 0){
+                                $new_component_details_row[$date_keys[$j]] = $component_details[$i][$date_keys[$j]] - $add_to_db;
+
+                                $update_db_row[$date_keys[$j]] = $add_to_db;
+                                $add_to_db = 0;
+                            }
+                        }
+                    }
+                }
+                else{
+                    for($j = 0; $j < $len-4; $j++){
+                        $new_component_details_row[$date_keys[$j]] = $component_details[$i][$date_keys[$j]];
+                    }
+                }
+                $new_component_details[] = $new_component_details_row;
+                $update_db[] = $update_db_row;
+            }
+            
+        }
+        $date_keys = array_unique($date_keys);                       //  }   get array of distinct dates
+        $date_keys = array_values($date_keys);
+        $this->load->dbforge();
+        if($this->dbforge->drop_table($bom_details['table_name'])){
+            $fields = array(
+                            'component_type' => array(
+                                                        'type' => 'VARCHAR',
+                                                        'constraint' => '20'
+                                                        ),
+                            'component_name' => array(
+                                                        'type' => 'VARCHAR',
+                                                        'constraint' => '100'
+                                                        
+                                                        ),
+                            'required_quantity' => array(
+                                                        'type' => 'INT',
+                                                        'default' => 0
+                                                        ),
+                            'issued_quantity' => array(
+                                                        'type' => 'INT',
+                                                        'default' => 0
+                                                        ),
+                            'delivered_quantity' => array(
+                                                        'type' => 'INT',
+                                                        'default' => 0
+                                                        )
+                            );
+            $this->dbforge->add_field($fields);
+            $this->dbforge->add_key('component_type',TRUE); 
+            $this->dbforge->add_key('component_name',TRUE); 
+            if($this->dbforge->create_table($bom_details['table_name'],TRUE)){
+                foreach($date_keys as $date){
+                    if(!$this->db->field_exists($date, $bom_details['table_name'])){
+                        $this->dbforge->add_column($bom_details['table_name'], array(
+                                                                            $date => array(
+                                                                                                            'type' =>'INT',
+                                                                                                            'default' => '0'
+                                                                                                            )
+                                                                                ));
+                    }
+                }
+                
+                if($this->db->insert_batch($bom_details['table_name'], $component_details)){
+                    if($this->db->update_batch($bom_details['table_name'], $new_component_details, 'component_name')){
+                        if($this->model_user->re_enter_into_db($bom_details, $update_db)){
+                            return true;
+                        }
+                    }
+                }
+                
+                    
+            }
+        }
+        return false;
+        
+        
+    }
+    
+    
+    public function re_enter_into_db($bom_details, $update_db){     //not working
+        switch($bom_details['model_grade']){
+            case 'EM': $table_name = "em_master_table";
+                        break;
+            case 'FM': $table_name = "fm_master_table";
+                        break;
+        }
+        echo "<pre>";
+        print_r($update_db);
+        echo "</pre>";
+        $fields = $this->db->list_fields($table_name);
+        sort($fields);
+        $len = sizeof($fields);
+        for($i = 0; $i < $len-3; $i++){
+            $dates[] = $fields[$i];
+        }
+        echo "<pre>";
+        print_r($dates);
+        echo "</pre>";
+        foreach($update_db as $row){
+            $l = sizeof($row);
+            if($l > 2){
+                $keys = array_keys($row);
+                for($i = 2; $i < $l; $i++){
+                    $date_keys[] = $keys[$i];
+                }
+                foreach($date_keys as $date){
+                    $this->db->where('component_type', $row['component_type']);
+                    $this->db->where('component_name', $row['component_name']);
+                    $query = $this->db->get($table_name);
+                    $result = $query->result_array();
+                    if($row[$date]){        //??
+                        $row[$date] = $row[$date] + $result[$date];
+                        $total = $row[$date] + $result['total'];
+                        $this->db->where('component_type', $row['component_type']);
+                        $this->db->where('component_name', $row['component_name']);
+                        $this->db->set($date, $row[$date]);
+                        $this->db->set('total', $total);
+                        $this->db->update($table_name);
+                    }
+                }
+            } 
+        }
+        return true;
+    }
+    
+    
+    
+    //***********************RESCREENS*******************
+    
+    
+    public function get_rescreens_for_user($type){
+        $this->db->where('assigned_user', $this->session->userdata('user_name'));
+        $this->db->where('rescreen_status', $type);
+        $query = $this->db->get('rescreens');
+        $result = $query->result_array();
+        return $result;        
+    }
+    
+    public function get_rescreen_data($rescreen_id){
+        $this->db->where('rescreen_id', $rescreen_id);
+        $query = $this->db->get('rescreens');
+        $result = $query->row_array();
+        return $result;
+    }
+    
+    public function conform_rescreen($new_date_of_expiry, $rescreen_id){
+        $new_date_of_expiry = preg_replace("!([0123][0-9])/([0-9]{2})/([0-9]{4})!", "$3-$2-$1", $new_date_of_expiry);
+        // change date format from dd/mm/yyyy to yyyy-mm-dd
+        $this->db->where('rescreen_id', $rescreen_id);
+        $this->db->set('date_of_expiry', $new_date_of_expiry);
+        $this->db->set('rescreen_status', 'RESCREEN_OVER');
+        if($this->db->update('rescreens')){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+    
+    
     
     
     

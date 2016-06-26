@@ -814,5 +814,109 @@ public function new_siv() {
         $this->model_user->insert_event($title, $start, $color);
     }
     
+    
+    
+    
+    
+    //************STORE OFFICER**********************
+    
+    public function store_officer_approved_boms_list(){
+        if(!$this->session->userdata('user_status')){
+        $this->login();
+        }
+        $this->page_data['assembled_bom'] = $this->model_user->get_approved_assembled_bom();
+        if(isset($this->page_data['page_content'])){
+            unset($this->page_data['page_content']);
+        }
+        $this->page_data["page_content"] = $this->load->view('user/store_officer_approved_bom_list_view',$this->page_data,TRUE);
+        $this->load->view('user/user_main_view',$this->page_data);
+    }
+    
+    public function store_officer_approved_bom_detail_view($bom_no){
+        if(!$this->session->userdata('user_status')){
+            $this->login();
+        }
+        $bom_details = $this->model_user->get_assembled_bom_details($bom_no);
+        $components = $this->model_user->get_assembled_bom_components($bom_details['table_name']);
+        //print_r($bom_details);
+        //print_r($components);
+        $bom_details['date_of_assembly'] = preg_replace("!([0-9]{4})-([0-9]{2})-([0123][0-9])!", "$3/$2/$1", $bom_details['date_of_assembly']);         //yyyy-mm-dd -> dd/mm/yyyy
+        $this->page_data['bom_details'] = $bom_details;
+        $this->page_data['components'] = $components;
+        if(isset($this->page_data['page_content'])){
+            unset($this->page_data['page_content']);
+        }
+        $this->page_data["page_content"] = $this->load->view('user/store_officer_approved_bom_details_view',$this->page_data,TRUE);
+        $this->load->view('user/user_main_view',$this->page_data);
+    }
+    
+    
+    
+    
+    public function confirm_delivery(){
+        if(!$this->session->userdata('user_status')){
+        $this->login();
+        }
+        $delivered_quantity = $this->input->post('delivered_quantity');
+        $bom_no = $this->input->post('bom_no');
+        $bom_details = $this->model_user->get_assembled_bom_details($bom_no);
+        //print_r($bom_details);
+        $bom_table_name = $bom_details['table_name'];
+        $component_details = $this->model_user->get_assembled_bom_components($bom_table_name);
+        
+        if($this->model_user->update_db_after_delivery($bom_details, $component_details, $delivered_quantity)){
+            if($this->model_user->change_bom_status($bom_no, 'DELIVERED')){
+                $this->insert_into_calendar("BOM_".$bom_no, date("Y-m-d") , 'bom_approved');
+                redirect('user/print_success/BOM_Delivery_Confirmed_Successfully.');
+            }
+        }
+        else{
+            $this->print_error("Failed to Confirm BOM Delivery.");
+        }
+        
+        
+    }
+    
+    
+    
+    
+    
+    //*************RESCREEN****************
+    
+    
+    
+    public function get_rescreens_for_user(){
+        
+        $this->page_data['rescreens'] = $this->model_user->get_rescreens_for_user('PENDING_RESCREEN');
+        if(isset($this->page_data['page_content'])){
+            unset($this->page_data['page_content']);
+        }
+        $this->page_data["page_content"] = $this->load->view('user/user_pending_rescreens_view',$this->page_data,TRUE);
+        $this->load->view('user/user_main_view',$this->page_data);
+        
+    }
+    
+    public function perform_rescreen($rescreen_id){
+        $this->page_data['rescreen_data'] = $this->model_user->get_rescreen_data($rescreen_id); 
+        if(isset($this->page_data['page_content'])){
+            unset($this->page_data['page_content']);
+        }
+        $this->page_data["page_content"] = $this->load->view('user/user_perform_rescreen_view',$this->page_data,TRUE);
+        $this->load->view('user/user_main_view',$this->page_data);
+    }
+    
+    public function confirm_rescreen(){
+        $new_date_of_expiry = $this->input->post('date_of_expiry');
+        $rescreen_id = $this->input->post('rescreen_id');
+        if($this->model_user->conform_rescreen($new_date_of_expiry, $rescreen_id)){
+            redirect('user/print_success/Re-Screen_Confirmed_Successfully.');
+        }
+        else{
+            $this->print_error("Error!");
+        }
+    }
+    
+    
+    
 
 }

@@ -63,6 +63,8 @@
 
       <div class="row">
         <div class="col-xs-12">
+            <form method="post" action="<?php echo base_url().'user/confirm_delivery/'; ?>">
+                <input type='hidden' name='bom_no' value="<?php echo $bom_details['bom_no']; ?>"/>
                     <div class="table-responsive">
                         <table class="table table-hover table-bordered table-striped">
                             <thead class="bg-gray">
@@ -75,11 +77,13 @@
                             if($bom_details['bom_status'] == 'APPROVED'){
                                 echo "<th>Issued Quantity</th>";
                             }
+                                echo "<th>Delivered Quantity</th>";
                             ?>
                             </tr>
                             </thead>
                             <tbody>
-
+                            
+                                
                             <?php
                                $i = 1;
                             foreach($components as $row) {
@@ -99,31 +103,39 @@
                                     echo $row['issued_quantity']."</span></td>"; 
                                     
                                 }
+                                echo "<td style=\"width:150px\">";
+                                echo "<div class=\"form-group\">";
+                                
+                                echo form_input(array(
+                                                            "type" => "number",
+                                                            "class" => "form-control",
+                                                            "style" => "width:150px",
+                                                            "id" => "delivered_quantity",
+                                                            "name" => "delivered_quantity[]",
+                                                            "placeholder" => $row['issued_quantity'],
+                                                            "value" => $row['issued_quantity'],
+                                                            "min" => "0",
+                                                            "max" => $row['issued_quantity']
+                                                            ));
+                                
+                                echo "</div>";
+                                echo "</td>";
                                 echo "</tr>";
                             }
                             ?>
-
+                            
                             </tbody>
                           </table>
                     </div>
                     <div class="row no-print">
-                    <div class="col-xs-4">
-                      <a href="<?php echo base_url().'user/print_assembled_bom/'.$bom_details['bom_no']; ?>" target="_blank" class="btn btn-default"><i class="fa fa-print"></i> Print</a>
+                    <div class="row no-print"> 
+                    <div class="col-xs-3 col-xs-offset-4"> 
+                    <button type="submit" name="submit" value="submit" class="btn btn-success"><i class="fa fa-check"></i> CONFIRM DELIVERY</button> 
+                    </div> 
                     </div>
-                    <div class="col-xs-4">
-                      <a href="<?php echo base_url().'user/assembled_bom_save_as_excel/'.$bom_details['bom_no']; ?>" class="btn btn-default btn-primary"><i class="fa fa-file-excel-o"></i> Save As Excel(Not working)</a>
-
-                    </div>
-                    <?php
-                    if(strcmp($bom_details['bom_status'],'PENDING_APPROVAL') == 0){
-                        echo "<div class=\"col-xs-4\">\n"; 
-                        echo "<a href=\"".base_url().'user/delete_assembled_bom/'.$bom_details['bom_no']."\" class=\"btn btn-danger pull-right\"><i class=\"fa fa-delete\"></i> Delete</a>\n"; 
-                        echo "                    </div>\n";   
-                    }    
-                    ?>
                   </div>
                 
-          
+          </form>
         </div>
         <!-- /.col -->
       </div>

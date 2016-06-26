@@ -36,7 +36,7 @@
                                         <td>".$row['user_name']."</td>
                                         <td>".$row['last_active_date']."</td>
                                         <td>".$row['join_date']."</td>
-                                        <td ><a class=\"btn col-xs-offset-5 text-danger\" href=\"".base_url().'admin/remove_user/'.$row['user_id']."\"><i class=\"glyphicon glyphicon-trash\"></i></a></td>
+                                        <td ><a class=\"btn col-xs-offset-5 text-danger\" href=\"".base_url().'admin/remove_user/'.$row['user_id']."\" onclick=\"return confirm('Are you sure you want to delete this item?')\"><i class=\"glyphicon glyphicon-trash\"></i></a></td>
                                     </tr>";
                             }
                             ?>    

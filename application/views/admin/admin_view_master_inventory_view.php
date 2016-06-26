@@ -32,7 +32,7 @@
         <div class="col-xs-12">
                     <div class="table-responsive">
                         <table class="table table-hover table-bordered table-striped">
-                            <thead class="bg-red">
+                            <thead class="bg-gray">
                             <tr>
                                 <th>Sl No.</th>
                                 <?php

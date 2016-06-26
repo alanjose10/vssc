@@ -35,6 +35,14 @@ class Model_verifier extends CI_Model {
         
     }
     
+    public function get_users($type) {
+        $this->db->select('user_id, user_name, name, last_active_date, join_date');
+        $query = $this->db->get_where('users', array(
+                                                    "user_type" => $type,
+                                                    ));
+        return $query->result_array();
+    }
+    
     
     
     
@@ -525,6 +533,129 @@ class Model_verifier extends CI_Model {
         }
         return $count;
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    //******************RESCREEN******************
+    
+    
+    public function get_components_for_rescreen($type){
+        switch($type){
+            case 'EM': $master_table_name = "em_master_table";
+                        break;
+            case 'FM': $master_table_name = "fm_master_table";
+                        break;
+        }
+        $date = date('Y-m-d', time() + (86400 * 90));       //date after 3 months
+        $query = $this->db->get($master_table_name);
+        $result = $query->result_array();
+
+        $rescreen_array = array();
+        $fields = $this->db->list_fields($master_table_name);
+        sort($fields);
+
+        
+        foreach($fields as $field){
+            if($field < $date){
+                $dates[] = $field;
+            }
+        }
+
+        foreach($result as $row){
+            foreach($dates as $date){
+                if($row[$date] > 0){
+                    $rescreen_array_row = array(
+                                                'grade' => $type,
+                                                'component_type' => $row['component_type'],
+                                                'component_name' => $row['component_name'],
+                                                'date_of_expiry' => $date,
+                                                'component_quantity' => $row[$date]
+                                                    );
+                    $rescreen_array[] = $rescreen_array_row;
+                }
+            }
+        }
+
+        return $rescreen_array;
+        
+    }
+    
+    
+    public function send_for_rescreen($rescreen_array){
+        if(!$this->db->table_exists('rescreens')){
+            $this->load->dbforge();
+                    $fields = array(
+                            'rescreen_id' => array(
+                                                    'type' => 'INT',
+                                                    'auto_increment' => TRUE
+                                                    ),
+                            'grade' => array(
+                                                        'type' => 'VARCHAR',
+                                                        'constraint' => '10'
+                                                        
+                                                        ),
+                            'component_type' => array(
+                                                        'type' => 'VARCHAR',
+                                                        'constraint' => '20'
+                                                        
+                                                        ),
+                            'component_name' => array(
+                                                        'type' => 'VARCHAR',
+                                                        'constraint' => '100',
+                                                        ),
+                            'date_of_expiry' => array(
+                                                        'type' => 'DATE',
+                                                        ),
+                            'component_quantity' => array(
+                                                        'type' => 'INT',
+                                                        ),
+                            'assigned_user' => array(
+                                                        'type' => 'VARCHAR',
+                                                        'constraint' => '20',
+                                                        ),
+                            'rescreen_status' => array(
+                                                        'type' => 'VARCHAR',
+                                                        'constraint' => '20',
+                                                        'default' => 'PENDING_RESCREEN'
+                                                        )
+                                    );
+                    $this->dbforge->add_field($fields);
+                    $this->dbforge->add_key('rescreen_id',TRUE);
+                    $this->dbforge->create_table('rescreens',TRUE);
+                }
+        switch($rescreen_array['grade']){
+            case 'EM': $master_table_name = "em_master_table";
+                        break;
+            case 'FM': $master_table_name = "fm_master_table";
+                        break;
+        }
+        
+        $this->db->where('component_type', $rescreen_array['component_type']);
+        $this->db->where('component_name', $rescreen_array['component_name']);
+        $query = $this->db->get($master_table_name);
+        $result = $query->row_array();
+        echo "<pre>";
+        print_r($result);
+        echo "</pre>";
+        $total = $result['total'] - $rescreen_array['component_quantity'];
+        
+        $this->db->set('total', $total);
+        $this->db->set($rescreen_array['date_of_expiry'], 0);
+        $this->db->where('component_type', $rescreen_array['component_type']);
+        $this->db->where('component_name', $rescreen_array['component_name']);
+        if($this->db->update($master_table_name)){      //update_master_db
+            if($this->db->insert('rescreens', $rescreen_array)){        //insert into rescreens table
+                return true;
+            }
+        }
+    }
+    
     
     
     

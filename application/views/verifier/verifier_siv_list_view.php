@@ -8,7 +8,7 @@
         SIVs<small><?php echo $type; ?></small>
       </h1>
       <ol class="breadcrumb">
-        <li><a href="<?php echo base_url().'user/dashboard'; ?>"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><a href="#"><i class="fa fa-dashboard"></i> Dashboard</a></li>
         <li class="active">SIV - <?php echo $type; ?></li>
       </ol>
     </section>

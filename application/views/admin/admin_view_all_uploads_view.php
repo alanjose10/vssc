@@ -28,6 +28,7 @@
                 echo "<span class=\"info-box-icon\"><i class=\"fa fa-file-excel-o\"></i></span>";
                 echo "<div class=\"info-box-content\">";
                 echo "<span class=\"info-box-text\">".$file."</span>";
+                echo "<a href=\"".base_url()."admin/download_uploaded_file/".$file."\"><span class=\"text-black info-box-number\"><i class=\"fa fa-download\"></i></span></a>";
                 echo "</div>";
                 echo "</div>";
                 echo "</div>";
