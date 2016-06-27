@@ -20,7 +20,7 @@
 
             <div class="info-box-content">
               <span class="info-box-text">Messages</span>
-              <span class="info-box-number">????</span>
+              <span class="info-box-number"><?php echo $message; ?></span>
             </div>
             <!-- /.info-box-content -->
           </div>

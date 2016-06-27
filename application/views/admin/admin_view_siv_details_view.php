@@ -13,7 +13,15 @@
     </section>
     <div class="pad margin row no-print">
             <div class="col-xs-12">
-                <div class="small-box bg-blue">
+                <div class="small-box <?php switch($siv_details['siv_status']){
+                                                    case 'PENDING_APPROVAL' : echo "bg-yellow";
+                                                                            break;
+                                                    case 'APPROVED' : echo "bg-green";
+                                                                            break;
+                                                    case 'REJECTED' : echo "bg-red";
+                                                                            break;
+                                                    }
+                                    ?>">
                 <div class="inner">
                     <div class="row">
                         <div class="col-xs-4">

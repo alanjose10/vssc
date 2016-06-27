@@ -57,35 +57,42 @@
       <div class="navbar-custom-menu">
         <ul class="nav navbar-nav">
           <!-- Messages: style can be found in dropdown.less-->
-          <li class="dropdown messages-menu">                       <!-- Messages -->
+           <li class="dropdown messages-menu">                       <!-- Messages -->
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
               <i class="fa fa-envelope-o"></i>
-              <span class="label label-success">4</span>
+              <span class="label label-success"><?=$message_count?></span>
             </a>
             <ul class="dropdown-menu">
-              <li class="header">You have 4 messages</li>
-              <li>
-                <!-- inner menu: contains the actual data -->
+              <li class="header">You have <?=$message_count?> messages</li> 
+                <li>    
                 <ul class="menu">
-                  <li><!-- start message -->
-                    <a href="#">
-                      <div class="pull-left">
-                        <img src="<?php echo base_url();?>assets/dist/img/user_m.jpg" class="img-circle" alt="Sender Image">
-                      </div>
-                      <h4>
-                        Sender Name
-                        <small><i class="fa fa-clock-o"></i> 2 mins</small>
-                      </h4>
-                      <p>Display message here!</p>
-                    </a>
-                  </li>
-                  <!-- end message -->
+                <?php
+                foreach($notification_details as $row)   {
+                print "<li><!-- start message -->\n";
+                print "<a href=\"#\">\n";
+                print "<div class=\"pull-left\">\n";
+                print "<img src=\"".base_url()."assets/dist/img/user_m.jpg\" class=\"img-circle\" alt=\"Sender Image\" style=\"height: 20px\">\n";
+                print "</div>\n";
+                print "<h4>\n";
+                    echo "<option value=\"".$row['sender_name']."\">".$row['sender_name']."</option>\n";
+                print "<small><i class=\"fa fa-clock-o\"></i>\n";
+                    //echo "<option value=\"".$row['time']."\">".$row['time']."</option>\n";
+                print "</small>\n";
+                print "</h4>\n";
+                print "<p>\n";
+                    //echo "<option value=\"".$row['message']."\">".$row['message']."</option>\n";
+                print "</p>\n";
+
+                print "</a>\n";
+                print "</li>";
+                }
+                ?>
                 </ul>
-              </li>
-              <li class="footer"><a href="#">See All Messages</a></li>
+                </li>
+                <li class="footer"><a href="<?php echo base_url().'user/message'; ?>">See All Messages</a></li>
             </ul>
           </li>
-          <li class="dropdown user user-menu">
+        <li class="dropdown user user-menu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
               <img src="<?php echo base_url();?>assets/dist/img/user_m.jpg" class="user-image" alt="User Image">
               <span class="hidden-xs"><?php echo $this->session->userdata('name'); ?></span>
@@ -140,10 +147,10 @@
             <i class="fa fa-dashboard"></i> <span>Dashboard</span>
           </a>
         </li>
-    <?php     //store_officer
+    <?php    /* //store_officer
           if($this->session->userdata('store_officer') == 1){
               echo "<!--";
-          }
+          } */
           ?>
         <li class="treeview">
           <a href="#">
@@ -172,7 +179,7 @@
               echo "<li><a href=\"".base_url()."user/choose_bom_for_entry\"><i class=\"fa fa-circle-o\"></i>Enter BOM</a></li>\n";
           }
             ?>
-        <li><a href="<?php echo base_url().'user/view_assembled_bom_list'; ?>"><i class="fa fa-circle-o"></i>Isseued BOMs</a></li>
+        <li><a href="<?php echo base_url().'user/view_assembled_bom_list'; ?>"><i class="fa fa-circle-o"></i>Issued BOMs</a></li>
         <li><a href="<?php echo base_url().'user/view_uploaded_bom_list'; ?>"><i class="fa fa-circle-o"></i>View Uploaded BOMs </a></li>  
             <?php     //bom_create
           if($this->session->userdata('bom_create') == 1){
@@ -185,11 +192,16 @@
           <a href="#">
             <i class="fa fa-refresh"></i>
             <i class="pull-right fa fa-angle-right"></i>
-            <span>Re-Screen #</span>
+            <span>Re-Screen</span>
           </a>
             <ul class="treeview-menu">
-                <li><a href="<?php echo base_url().'user/get_rescreens_for_user'; ?>"><i class="fa fa-circle-o"></i>Pending Re-Screens</a></li>
-                <li><a href="<?php echo base_url().'user/???'; ?>"><i class="fa fa-circle-o"></i>Completed Re-Screens</a></li>
+                <?php
+                if($this->session->userdata('rescreen') == 1){
+                    echo "<li><a href=\"".base_url()."user/get_rescreens_for_user\"><i class=\"fa fa-circle-o\"></i>Pending Re-Screens</a></li>";
+                }
+                ?>
+                
+                <li><a href="<?php echo base_url().'user/get_completed_rescreens'; ?>"><i class="fa fa-circle-o"></i>Completed Re-Screens</a></li>
             </ul>
         </li>
         <li>
@@ -198,12 +210,11 @@
           </a>
         </li>
         <li>
-          <a href="#">
-            <i class="fa fa-envelope"></i> <span>Messages #</span>
-            <small class="label pull-right bg-yellow">12</small>
+          <a href="<?php echo base_url().'user/message'; ?>">
+            <i class="fa fa-envelope"></i> <span>Messages</span>
           </a>
         </li>
-    <?php     //store_officer
+    <?php   /*  //store_officer
       if($this->session->userdata('store_officer') == 1){
           echo "-->";
           echo "<li class=\"treeview\">
@@ -221,7 +232,7 @@
         </li>";
           
           
-      }      
+      }      */
       ?>
           
     </ul>

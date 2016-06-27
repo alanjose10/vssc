@@ -303,6 +303,86 @@ class Model_master extends CI_Model {
             $this->dbforge->create_table('fm_master_table',TRUE);
         }
         
+        //message table
+        if(!$this->db->table_exists('message_details')){
+            $this->dbforge->add_field(array(
+                                        'msg_no' => array(
+                                                            'type' => 'INT',
+                                                            'auto_increment' => TRUE
+                                                            ),
+                                        'sender_name' => array(
+                                                            'type' => 'VARCHAR',
+                                                            'constraint' => '50'
+                                                            ),
+                                        'receiver_name' => array(
+                                                            'type' => 'VARCHAR',
+                                                            'constraint' => '50'                
+                                                            ),
+                                        'message' => array(
+                                                                'type' => 'VARCHAR',
+                                                                'constraint' => '200'
+                                                                  ),
+                                        'date' => array(
+                                                            'type' => 'DATE',
+                                                        
+                                                        ),
+                                        'time' => array(
+                                                                  'type' => 'TIME',
+                                                                  
+                                                                    ),
+                                        'status' => array(
+                                                              'type' => 'VARCHAR',
+                                                              'constraint' => '20',
+                                                              'default' => 'unseen'
+                                                                    )
+                                        
+                                        ));
+            $this->dbforge->add_key('msg_no',TRUE);
+            $this->dbforge->create_table('message_details',TRUE);    
+        }
+        
+        //rescreens
+        if(!$this->db->table_exists('rescreens')){
+            $this->load->dbforge();
+                    $fields = array(
+                            'rescreen_id' => array(
+                                                    'type' => 'INT',
+                                                    'auto_increment' => TRUE
+                                                    ),
+                            'grade' => array(
+                                                        'type' => 'VARCHAR',
+                                                        'constraint' => '10'
+                                                        
+                                                        ),
+                            'component_type' => array(
+                                                        'type' => 'VARCHAR',
+                                                        'constraint' => '20'
+                                                        
+                                                        ),
+                            'component_name' => array(
+                                                        'type' => 'VARCHAR',
+                                                        'constraint' => '100',
+                                                        ),
+                            'date_of_expiry' => array(
+                                                        'type' => 'DATE',
+                                                        ),
+                            'component_quantity' => array(
+                                                        'type' => 'INT',
+                                                        ),
+                            'assigned_user' => array(
+                                                        'type' => 'VARCHAR',
+                                                        'constraint' => '20',
+                                                        ),
+                            'rescreen_status' => array(
+                                                        'type' => 'VARCHAR',
+                                                        'constraint' => '20',
+                                                        'default' => 'PENDING_RESCREEN'
+                                                        )
+                                    );
+                    $this->dbforge->add_field($fields);
+                    $this->dbforge->add_key('rescreen_id',TRUE);
+                    $this->dbforge->create_table('rescreens',TRUE);
+                }
             
     }      //main function
         

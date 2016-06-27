@@ -73,12 +73,12 @@
         <!-- /.col -->
       </div><br><br>
         <div class="row no-print">
+
                     <div class="col-xs-3 col-xs-offset-1">
                       <a href="<?php echo base_url().'admin/print_master_inventory/'.$type; ?>" target="_blank" class="btn btn-default"><i class="fa fa-print"></i> Print</a>
                     </div>
                     <div class="col-xs-3 col-xs-offset-1">
-                      <a href="<?php echo base_url().'admin/master_inventory_save_as_excel/'.$type; ?>" class="btn btn-default btn-primary"><i class="fa fa-file-excel-o"></i> Save As Excel(Not working)</a>
-
+                      <a href="<?php echo base_url().'admin/master_inventory_save_as_excel/'.$type; ?>" class="btn btn-default btn-primary"><i class="fa fa-file-excel-o"></i> Save As Excel</a>
                     </div>
         </div>        
         

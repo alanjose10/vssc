@@ -265,6 +265,13 @@ class Model_admin extends CI_Model {
         return $query->result_array();
     }
     
+    public function get_issued_siv_by_type($type){
+        $this->db->where('siv_status', $type);
+        $query = $this->db->get('siv_status');
+        
+        return $query->result_array();
+    }
+    
     public function get_siv_by_siv_no ($siv_no) {
         $query = $this->db->get_where('siv_status',array(
                                             'siv_no' => $siv_no
@@ -389,6 +396,14 @@ class Model_admin extends CI_Model {
         return $query->result_array();
     }
     
+    public function get_components_of_uploaded_bom($bom_table_name) {
+        $query = $this->db->get($bom_table_name);
+        //print_r($query->result_array());
+        $results = $query->result_array();
+       // print_r ($results);
+        return $results;
+    }
+    
     public function get_bom_by_bom_no ($bom_no) {
         $query = $this->db->get_where('bom_list',array(
                                             'bom_no' => $bom_no
@@ -397,12 +412,35 @@ class Model_admin extends CI_Model {
         return $result;
     }
     
-    public function get_components_of_bom($bom_table_name)  {
-        $this->db->select('component_id, component_type, component_name, component_quantity');
-        $this->db->where('component_quantity !=', 0);
+    public function get_assembled_bom_by_bom_no ($bom_no) {
+        $query = $this->db->get_where('bom_status',array(
+                                            'bom_no' => $bom_no
+                                                ));
+        $result = $query->row_array();
+        return $result;
+    }
+    
+    
+    
+    public function get_components_of_bom($bom_table_name)  {                                   //save as excel for rejected and pending
+        $this->db->select('component_type, component_name, required_quantity');
+        $this->db->where('required_quantity !=', 0);
         $query = $this->db->get($bom_table_name);
         //print_r($query->result_array());
-        return $query->result_array();
+        $results = $query->result_array();
+       // print_r ($results);
+        return $results;
+    }
+    
+    public function get_components_of_bom_approved($bom_table_name)  {                          //save as excel for approved new
+        $this->db->select('component_type, component_name, required_quantity, issued_quantity');
+        $this->db->where('required_quantity !=', 0);
+        $query = $this->db->get($bom_table_name);
+        //print_r($query->result_array());
+        $results = $query->result_array();
+       // print_r ($results);
+        return $results;
+    
     }
     
     public function delete_uploaded_bom($bom_no){
@@ -425,6 +463,12 @@ class Model_admin extends CI_Model {
     }
     
     public function get_assembled_bom(){
+        $query = $this->db->get('bom_status');
+        return $query->result_array();
+    }
+    
+    public function get_assembled_bom_by_type($type){
+        $this->db->where('bom_status', $type);
         $query = $this->db->get('bom_status');
         return $query->result_array();
     }
@@ -568,5 +612,165 @@ class Model_admin extends CI_Model {
         
         
     }
+    
+    
+    
+    //*********************MESSAGES********************
+    
+    
+    public function get_message_by_sender_name_receiver_name ($sender_name, $receiver_name) {              //message new
+        
+        $this->db->order_by('msg_no', 'DESC');
+        $this->db->select('sender_name, receiver_name, message, date, time, status');
+        $this->db->where("(sender_name = '$sender_name' AND receiver_name = '$receiver_name')
+                    OR (sender_name = '$receiver_name' AND receiver_name = '$sender_name')");
+                               
+        $query = $this->db->get('message_details');
+        $result = $query->result_array();
+         $row_count = $query->num_rows();
+        //if($sender_name == array_column[$result, 'receiver_name'])
+        for($x=0; $x<$row_count; $x++) {
+            if($sender_name == $result[$x]['receiver_name']) {
+        $this->db->where("(sender_name = '$receiver_name' AND receiver_name = '$sender_name')");
+        $this->db->update('message_details', array(
+                                            'status' => 'seen'
+                                            ));
+                        
+            }
+        }
+        //print_r($result);
+        return $result;
+         
+      }
+   
+    public function get_all_user_names(){                                                       //message new
+        $sender_name = $this->session->userdata('user_name');
+        //$this->db->select('user_name');
+        $this->db->distinct('user_name');
+        $this->db->where("(user_name != '$sender_name')");
+        $query = $this->db->get('users');
+        $result = $query->result_array();
+        //print_r($result);
+        return $result;  
+    }
+    
+    public function insert_message($sender_name, $receiver_name, $message){                         //message new
+
+        date_default_timezone_set('asia/kolkata');
+        //$date = date('m/d/Y h:i:s a', time());
+        //date_default_timezone_set("America/New_York");
+        $time=date("h:i:sa");
+        $date = date("Y/m/d");
+        $this->db->set('sender_name', $sender_name);
+        $this->db->set('receiver_name', $receiver_name);
+        $this->db->set('message', $message);
+        //echo ($message);
+        $this->db->set('time', $time);
+        $this->db->set('date', $date);
+        $this->db->set('status', "unseen");
+        $this->db->insert('message_details');
+        
+        
+    }
+    
+    public function get_message_count(){
+        $sender_name = $this->session->userdata('user_name');
+        $this->db->order_by('msg_no', 'DESC');
+        $this->db->distinct();
+        $this->db->select('sender_name');//, message, date, time, status
+        $this->db->where("(receiver_name = '$sender_name' AND status = 'unseen')");
+        $query = $this->db->get('message_details');
+        $row_count = $query->num_rows();
+        $result = $row_count;
+        
+        //$result['count'] = $row_count; 
+        //$row_count = $query->num_rows();
+        //print_r($result);
+        return $result;
+        
+    }
+    
+    public function get_message_notification_details(){
+        $sender_name = $this->session->userdata('user_name');
+        $this->db->order_by('msg_no', 'DESC');
+        $this->db->distinct();
+        $this->db->select('sender_name');//, message, date, time, status
+        $this->db->where("(receiver_name = '$sender_name' AND status = 'unseen')");
+        $query = $this->db->get('message_details');
+        //$row_count = $query->num_rows();
+        $result = $query->result_array();
+        
+       // $result['count'] = $row_count; 
+        //$row_count = $query->num_rows();
+        //print_r($result);
+        return $result;
+        
+    }
+    
+    
+    
+    //************DASHBOARD****************
+    
+    public function get_no_of_siv($type){
+        $this->db->where('siv_status', $type);
+        $query = $this->db->get('siv_status');
+        $result = $query->num_rows();
+        return $result;
+    }
+    
+    public function get_no_of_bom($type){
+        $this->db->where('bom_status', $type);
+        $query = $this->db->get('bom_status');
+        $result = $query->num_rows();
+        return $result;
+    }
+    
+    public function get_no_of_uploaded_bom(){
+        $query = $this->db->get('bom_list');
+        $result = $query->num_rows();
+        return $result;
+    }
+    
+    public function get_no_of_calendar_events(){
+        $this->db->where('user', 'general');
+        $query = $this->db->get('calendar_events');
+        $result = $query->num_rows();
+        return $result;
+    }
+    
+    public function get_no_of_components_to_expire_in_3($type){
+        switch($type){
+            case 'em': $table_name = "em_master_table";
+                        break;
+            case 'fm': $table_name = "fm_master_table";
+                        break;
+        }
+        $fields = $this->db->list_fields($table_name);
+        sort($fields);
+        $len = sizeof($fields);
+        for($i = 0; $i < $len-3; $i++){
+            $dates[] = $fields[$i];
+        }
+        $query = $this->db->get($table_name);
+        $result = $query->result_array();
+        $count = 0;
+        $three_months = date('Y-m-d', time() + (86400 * 90));
+        foreach($result as $row){
+            foreach($dates as $date){
+                if(($date < $three_months) && $row[$date] > 0){
+                    //echo $date;
+                    $count++;
+                }
+            }
+        
+        }
+        return $count;
+    }
+    
+    
+    
+    
+    
+    
     
 }

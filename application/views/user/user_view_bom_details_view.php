@@ -86,18 +86,25 @@
 
       <!-- this row will not appear when printing -->
       <div class="row no-print">
-        <div class="col-xs-4">
-          <a href="<?php echo base_url().'user/print_bom/'.$bom_details['bom_no']; ?>" target="_blank" class="btn btn-default"><i class="fa fa-print"></i> Print</a>
-         
+       
           
-        </div>
-        <div class="col-xs-4 col-xs-offset-1">
-          <a href="#" class="btn btn-default btn-primary"><i class="fa fa-file-excel-o"></i> Save As Excel</a>
+          <?php
+   
+              if($this->session->userdata('print_excel') == 1){
+
+                  echo "<div class=\"col-xs-4\">
+              <a href=\"".base_url().'user/print_bom/'.$bom_details['bom_no']."\" target=\"_blank\" class=\"btn btn-default\"><i class=\"fa fa-print\"></i> Print</a>
+            </div>";
+
+                 
+              }
+          
             
-        </div>
-        <div class="col-xs-2">
+              ?>
+          <div class="col-xs-2">
           <a href="<?php echo base_url().'user/delete_uploaded_bom/'.$bom_details['bom_no']; ?>" class="btn btn-danger pull-right"><i class="fa fa-delete"></i> Delete</a>
         </div>
+          
       </div>
     </section>
     <!-- /.content -->

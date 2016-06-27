@@ -11,12 +11,12 @@ class Admin extends CI_Controller {
     
     
     public function index(){
-            $this->login();
+            redirect("admin/login");
     }
     
     public function login() {
-        if($this->session->userdata('user_status')){
-            $this->dashboard();
+        if(($this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
+           redirect('admin/dashboard');
         }
         else{
             $this->load->view('login');
@@ -24,6 +24,10 @@ class Admin extends CI_Controller {
     }
     
     public function login_validation(){
+        if(($this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
+            redirect('admin/dashboard');
+        }
+        
         if($this->input->post()){
                 //$this->load->library('form_validation');
                 $this->form_validation->set_rules('username', 'Username', 'required');
@@ -33,7 +37,7 @@ class Admin extends CI_Controller {
                 }
                 else{
                     if($this->model_admin->login()){
-                        $this->dashboard();
+                        redirect('admin/dashboard');
                     }
                     else{
                         $data = array(
@@ -69,7 +73,7 @@ class Admin extends CI_Controller {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('fail_alert_view',$this->page_data,TRUE);
-        $this->load->view('admin/admin_main_view',$this->page_data);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
     }
     
     public function print_success($message){
@@ -78,21 +82,33 @@ class Admin extends CI_Controller {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('success_alert_view',$this->page_data,TRUE);
-        $this->load->view('admin/admin_main_view',$this->page_data);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
     }
     
     public function dashboard() {
-        if($this->session->userdata('user_status')){
+        $this->page_data["message"] = $this->model_admin->get_message_count();
+        $this->page_data["pending_approval_siv_no"] = $this->model_admin->get_no_of_siv('PENDING_APPROVAL');
+        $this->page_data["approved_siv_no"] = $this->model_admin->get_no_of_siv('APPROVED');
+        $this->page_data["rejected_siv_no"] = $this->model_admin->get_no_of_siv('REJECTED');
+        $this->page_data["pending_approval_bom_no"] = $this->model_admin->get_no_of_bom('PENDING_APPROVAL');
+        $this->page_data["approved_bom_no"] = $this->model_admin->get_no_of_bom('APPROVED');
+        $this->page_data["rejected_bom_no"] = $this->model_admin->get_no_of_bom('REJECTED');
+        $this->page_data["no_of_uploaded_boms"] = $this->model_admin->get_no_of_uploaded_bom();
+        $this->page_data["no_of_calendar_events"] = $this->model_admin->get_no_of_calendar_events();
+        $this->page_data["no_of_eg_to_expire"] = $this->model_admin->get_no_of_components_to_expire_in_3('em');
+        $this->page_data["no_of_fg_to_expire"] = $this->model_admin->get_no_of_components_to_expire_in_3('fm');
+        
+        if(($this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
             //$this->get_session_details();
             if(isset($this->page_data['page_content'])){
                 unset($this->page_data['page_content']);
             }
             $this->page_data["page_content"] = $this->load->view('admin/admin_dashboard_view',$this->page_data,TRUE);
-            $this->load->view('admin/admin_main_view',$this->page_data);
+            $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
             //print_r($this->page_data);           
         }
         else{
-            $this->login();
+            redirect("admin/login");
         }
     }
     public function view_users() {
@@ -103,11 +119,11 @@ class Admin extends CI_Controller {
         $this->page_data["view_users"] = $this->model_admin->get_users('user');
         //print_r($this->page_data["view_users"]);
         $this->page_data["page_content"] = $this->load->view('admin/admin_view_users_view.php',$this->page_data,TRUE);
-        $this->load->view('admin/admin_main_view',$this->page_data);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
     }
     
     public function add_user() {
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         if($this->input->post()){
@@ -147,12 +163,12 @@ class Admin extends CI_Controller {
                 unset($this->page_data['page_content']);
             }
             $this->page_data["page_content"] = $this->load->view('admin/admin_add_user_view.php',$this->page_data,TRUE);
-            $this->load->view('admin/admin_main_view',$this->page_data);
+            $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
         }
     }
     
     public function remove_user($user_id){
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         if($this->model_admin->remove_user($user_id)){
@@ -166,7 +182,7 @@ class Admin extends CI_Controller {
     }
     
     public function view_user_privileges() {
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         if($this->input->post()){
@@ -179,7 +195,7 @@ class Admin extends CI_Controller {
                 unset($this->page_data['page_content']);
             }
             $this->page_data["page_content"] = $this->load->view('admin/admin_edit_user_privilege_view',$this->page_data,TRUE);
-            $this->load->view('admin/admin_main_view',$this->page_data);
+            $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
         }
         else {
            $this->page_data["user_privileges"] = $this->model_admin->get_user_privileges(); 
@@ -190,13 +206,13 @@ class Admin extends CI_Controller {
                 unset($this->page_data['page_content']);
             }
             $this->page_data["page_content"] = $this->load->view('admin/admin_view_user_privileges_view',$this->page_data,TRUE);
-            $this->load->view('admin/admin_main_view',$this->page_data); 
+            $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data); 
         }
         
     }
     
     public function save_privilege() {
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         if($this->input->post()){
@@ -257,7 +273,7 @@ class Admin extends CI_Controller {
     }
     
     public function add_verifier() {
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
             if($this->input->post()){
@@ -295,12 +311,12 @@ class Admin extends CI_Controller {
                     unset($this->page_data['page_content']);
                 }
                 $this->page_data["page_content"] = $this->load->view('admin/admin_add_verifier_view.php',$this->page_data,TRUE);
-                $this->load->view('admin/admin_main_view',$this->page_data);
+                $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
             }
         }
     
     public function remove_verifier($user_id){
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         if($this->model_admin->remove_verifier($user_id)){
@@ -314,7 +330,7 @@ class Admin extends CI_Controller {
     
     
     public function view_verifiers() {
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         //$this->get_session_details();
@@ -324,7 +340,7 @@ class Admin extends CI_Controller {
         $this->page_data["view_verifier"] = $this->model_admin->get_users('verifier');
         //print_r($this->page_data["view_users"]);
         $this->page_data["page_content"] = $this->load->view('admin/admin_view_verifiers_view.php',$this->page_data,TRUE);
-        $this->load->view('admin/admin_main_view',$this->page_data);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
     }
     
     
@@ -345,7 +361,7 @@ class Admin extends CI_Controller {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('admin/admin_view_master_inventory_view',$this->page_data,TRUE);
-        $this->load->view('admin/admin_main_view',$this->page_data);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
         
     }
     
@@ -371,6 +387,87 @@ class Admin extends CI_Controller {
     }
     
     
+    public function master_inventory_save_as_excel($type){              //MASTER INVENTORY SAVE AS EXCEL EM AND FM new
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
+        $this->login();
+        }
+        $this->load->library('phpexcel');
+        $this->load->library('PHPExcel/IOFactory');
+        $objPHPExcel = new phpexcel();
+        $master_inventory_table_name =  strtolower("master_inventory_".$type."_grade");       //eg:  master_inventory_em_grade   
+        $file_name = $master_inventory_table_name.".xlsx";
+        $components = $this->model_admin->get_master_inventory($type);
+        //print_r($components);
+        $objPHPExcel->getProperties()->setCreator($this->session->userdata('name')); //author the excel file
+        $objPHPExcel->getActiveSheet()->mergeCells('A1:D1');
+        $objPHPExcel->getActiveSheet()->setCellValue('A1', $master_inventory_table_name);
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(0, 2, "sl_no"); //insert column headings
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(1, 2, "component_type");
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(2, 2, "component_name");
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(3, 2, "total");
+        
+        $objPHPExcel->getActiveSheet()->getColumnDimension("A")->setAutoSize(true); //auto width
+        $objPHPExcel->getActiveSheet()->getColumnDimension("B")->setAutoSize(true);
+        $objPHPExcel->getActiveSheet()->getColumnDimension("C")->setAutoSize(true);
+        $objPHPExcel->getActiveSheet()->getColumnDimension("D")->setAutoSize(true);
+        
+        
+        $objPHPExcel->getActiveSheet()->getStyle("A1")->applyFromArray(array(
+                                                                        "font" => array(
+                                                                                        "bold" => true
+                                                                                        ), 
+                                                                        "alignment" => array(
+                                                                                            "horizontal" => PHPExcel_Style_Alignment::HORIZONTAL_CENTER
+                                                                                            ),
+                                                                        "fill" => array(
+                                                                                        "type" => PHPExcel_Style_Fill::FILL_SOLID,
+                                                                                        "startcolor" => array(
+                                                                                                                "rgb" => "3C8DBC"
+                                                                                                                )
+                                                                                        ),
+                                                                        "borders" => array(
+                                                                                            "allborders" => array(
+                                                                                                                    "style" => PHPExcel_Style_Border::BORDER_THIN
+                                                                                                                    )
+                                                                                            )
+                                                                        ));
+        $objPHPExcel->getActiveSheet()->getStyle("A2:D2")->applyFromArray(array(
+                                                                        "font" => array(
+                                                                                        "bold" => true
+                                                                                        ), 
+                                                                        "alignment" => array(
+                                                                                            "horizontal" => PHPExcel_Style_Alignment::HORIZONTAL_CENTER
+                                                                                            ),
+                                                                        "fill" => array(
+                                                                                        "type" => PHPExcel_Style_Fill::FILL_SOLID,
+                                                                                        "startcolor" => array(
+                                                                                                                "rgb" => "00A65A"
+                                                                                                                )
+                                                                                        ),
+                                                                        "borders" => array(
+                                                                                            "allborders" => array(
+                                                                                                                    "style" => PHPExcel_Style_Border::BORDER_THIN
+                                                                                                                    )
+                                                                                            )
+                                                                        ));
+        $r = 3;
+        $i = 1;
+        foreach($components as $row){
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(0, $r, $i++);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(1, $r, $row['component_type']);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(2, $r, $row['component_name']);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(3, $r, $row['total']);
+            $r++;
+        }
+        $objWriter = IOFactory::createWriter($objPHPExcel, 'Excel2007');
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment;filename=".$file_name);
+        header('Cache-Control: max-age=0');
+        $objWriter->save('php://output');
+        
+    }
+
+    
     
     
     
@@ -378,7 +475,7 @@ class Admin extends CI_Controller {
     
     
     public function view_issued_siv_list(){
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         $this->page_data['issued_siv'] = $this->model_admin->get_issued_siv();
@@ -388,11 +485,26 @@ class Admin extends CI_Controller {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('admin/admin_issued_siv_list_view',$this->page_data,TRUE);
-        $this->load->view('admin/admin_main_view',$this->page_data);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
+    }
+    
+    public function view_siv_list($type) {
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
+        $this->login();
+        }
+        //echo $type;
+        $this->page_data['type'] = $type;
+        $this->page_data['issued_siv'] = $this->model_admin->get_issued_siv_by_type($type);
+        //print_r($this->page_data['siv']);
+        if(isset($this->page_data['page_content'])){
+            unset($this->page_data['page_content']);
+        }
+        $this->page_data["page_content"] = $this->load->view('admin/admin_issued_siv_list_view',$this->page_data,TRUE);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
     }
     
     public function view_full_siv($siv_no) {
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         $siv_details = $this->model_admin->get_siv_by_siv_no($siv_no);
@@ -408,12 +520,12 @@ class Admin extends CI_Controller {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('admin/admin_view_siv_details_view',$this->page_data,TRUE);
-        $this->load->view('admin/admin_main_view',$this->page_data);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
         
     }
     
     public function print_siv($siv_no) {
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         $siv_details = $this->model_admin->get_siv_by_siv_no($siv_no);
@@ -427,7 +539,7 @@ class Admin extends CI_Controller {
     }
     
     public function siv_save_as_excel($siv_no){
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         $this->load->library('phpexcel');
@@ -521,7 +633,7 @@ class Admin extends CI_Controller {
     
     
     public function create_bom_admin() {         
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         if($this->input->post()) {
@@ -557,13 +669,13 @@ class Admin extends CI_Controller {
                 unset($this->page_data['page_content']);
             }
             $this->page_data["page_content"] = $this->load->view('admin/admin_create_bom_view',$this->page_data,TRUE);
-            $this->load->view('admin/admin_main_view',$this->page_data);
+            $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
             
         }
     }
     
     public function read_bom_excel($bom_details) {
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         $file = "./uploads/BOM_".$bom_details['bom_name']."_".$bom_details['model_type'].".xlsx";
@@ -617,7 +729,7 @@ class Admin extends CI_Controller {
     }
     
     public function download_bom_template(){
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         $this->load->helper('download');
@@ -637,11 +749,11 @@ class Admin extends CI_Controller {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('admin/admin_uploaded_bom_list_view',$this->page_data,TRUE);
-        $this->load->view('admin/admin_main_view',$this->page_data);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
     }
     
     public function view_all_uploads($file_to_delete = null){
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         if(isset($file_to_delete)){
@@ -664,11 +776,11 @@ class Admin extends CI_Controller {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('admin/admin_view_all_uploads_view',$this->page_data,TRUE);
-        $this->load->view('admin/admin_main_view',$this->page_data);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
     }
     
     public function download_uploaded_file($file_name){
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         $this->load->helper('download');
@@ -677,12 +789,12 @@ class Admin extends CI_Controller {
     }
     
     public function view_full_bom($bom_no) {
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         $bom_details = $this->model_admin->get_bom_by_bom_no($bom_no);
         $bom_table_name = strtolower("bom_".$bom_details['bom_name']."_".$bom_details['model_type']);
-        $component_details = $this->model_admin->get_components_of_bom($bom_table_name);
+        $component_details = $this->model_admin->get_components_of_uploaded_bom($bom_table_name);
         //print_r($component_details);
         //print_r($bom_details);
         $this->page_data['bom_details'] = $bom_details;
@@ -691,17 +803,17 @@ class Admin extends CI_Controller {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('admin/admin_view_bom_details_view',$this->page_data,TRUE);
-        $this->load->view('admin/admin_main_view',$this->page_data);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
         
     }
     
     public function print_bom($bom_no) {
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         $bom_details = $this->model_admin->get_bom_by_bom_no($bom_no);
         $bom_table_name = strtolower("bom_".$bom_details['bom_name']."_".$bom_details['model_type']);
-        $component_details = $this->model_admin->get_components_of_bom($bom_table_name);
+        $component_details = $this->model_admin->get_components_of_uploaded_bom($bom_table_name);
         $this->page_data['bom_details'] = $bom_details;
         $this->page_data['component_details'] = $component_details;
         $this->load->view('admin/admin_print_bom_view',$this->page_data);
@@ -720,7 +832,7 @@ class Admin extends CI_Controller {
     
     
     public function view_assembled_bom_list(){
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         $this->page_data['assembled_bom'] = $this->model_admin->get_assembled_bom();
@@ -728,7 +840,20 @@ class Admin extends CI_Controller {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('admin/admin_assembled_bom_list_view',$this->page_data,TRUE);
-        $this->load->view('admin/admin_main_view',$this->page_data);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
+    }
+    
+    public function view_assembled_bom_list_by_type($type){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
+        $this->login();
+        }
+        $this->page_data['type'] = $type;
+        $this->page_data['assembled_bom'] = $this->model_admin->get_assembled_bom_by_type($type);
+        if(isset($this->page_data['page_content'])){
+            unset($this->page_data['page_content']);
+        }
+        $this->page_data["page_content"] = $this->load->view('admin/admin_assembled_bom_list_view',$this->page_data,TRUE);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
     }
     
     public function view_assembled_bom_full($bom_no){
@@ -743,11 +868,11 @@ class Admin extends CI_Controller {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('admin/admin_view_assembled_bom_details_view',$this->page_data,TRUE);
-        $this->load->view('admin/admin_main_view',$this->page_data);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
     }
     
     public function print_assembled_bom($bom_no){
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         $bom_details = $this->model_admin->get_assembled_bom_details($bom_no);
@@ -770,6 +895,189 @@ class Admin extends CI_Controller {
     }
     
     
+    public function assembled_bom_save_as_excel($bom_no) {     //save as excel for approved, rejected and pending
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
+        $this->login();
+        }
+        $bom_details = $this->model_admin->get_bom_by_bom_no($bom_no);
+        if($bom_details['bom_status'] == "APPROVED") {
+        $this->load->library('phpexcel');
+        $this->load->library('PHPExcel/IOFactory');
+        $objPHPExcel = new phpexcel();
+        $bom_details = $this->model_admin->get_assembled_bom_details($bom_no);
+        $bom_table_name =  strtolower($bom_details['bom_name']."_".$bom_details['model_grade']."_".$bom_details['bom_model_no']."_".$bom_details['date_of_assembly']."_".$bom_details['no_of_components']);       //eg:  athil_em_431_2031-12-23_5   
+        //'component_type, component_name, required_quantity'
+        //echo $bom_table_name;
+        //print_r($bom_details);
+        $components = $this->model_admin->get_components_of_bom_approved($bom_table_name);
+        $file_name = $bom_table_name.".xlsx";
+        //print_r($components);
+        $objPHPExcel->getProperties()->setCreator($this->session->userdata('name')); //author the excel file
+        $objPHPExcel->getActiveSheet()->mergeCells('A1:E1');
+        $objPHPExcel->getActiveSheet()->setCellValue('A1', $bom_table_name);
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(0, 2, "component_no"); //insert column headings
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(1, 2, "component_type");
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(2, 2, "component_name");
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(3, 2, "required_quantity");
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(4, 2, "issued_quantity");
+        
+        
+        $objPHPExcel->getActiveSheet()->getColumnDimension("A")->setAutoSize(true); //auto width
+        $objPHPExcel->getActiveSheet()->getColumnDimension("B")->setAutoSize(true);
+        $objPHPExcel->getActiveSheet()->getColumnDimension("C")->setAutoSize(true);
+        $objPHPExcel->getActiveSheet()->getColumnDimension("D")->setAutoSize(true);
+        $objPHPExcel->getActiveSheet()->getColumnDimension("E")->setAutoSize(true);
+        
+        
+        $objPHPExcel->getActiveSheet()->getStyle("A1")->applyFromArray(array(
+                                                                        "font" => array(
+                                                                                        "bold" => true
+                                                                                        ), 
+                                                                        "alignment" => array(
+                                                                                            "horizontal" => PHPExcel_Style_Alignment::HORIZONTAL_CENTER
+                                                                                            ),
+                                                                        "fill" => array(
+                                                                                        "type" => PHPExcel_Style_Fill::FILL_SOLID,
+                                                                                        "startcolor" => array(
+                                                                                                                "rgb" => "3C8DBC"
+                                                                                                                )
+                                                                                        ),
+                                                                        "borders" => array(
+                                                                                            "allborders" => array(
+                                                                                                                    "style" => PHPExcel_Style_Border::BORDER_THIN
+                                                                                                                    )
+                                                                                            )
+                                                                        ));
+        $objPHPExcel->getActiveSheet()->getStyle("A2:E2")->applyFromArray(array(
+                                                                        "font" => array(
+                                                                                        "bold" => true
+                                                                                        ), 
+                                                                        "alignment" => array(
+                                                                                            "horizontal" => PHPExcel_Style_Alignment::HORIZONTAL_CENTER
+                                                                                            ),
+                                                                        "fill" => array(
+                                                                                        "type" => PHPExcel_Style_Fill::FILL_SOLID,
+                                                                                        "startcolor" => array(
+                                                                                                                "rgb" => "00A65A"
+                                                                                                                )
+                                                                                        ),
+                                                                        "borders" => array(
+                                                                                            "allborders" => array(
+                                                                                                                    "style" => PHPExcel_Style_Border::BORDER_THIN
+                                                                                                                    )
+                                                                                            )
+                                                                        ));
+        $r = 3;
+        $i = 1;
+        foreach($components as $row){
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(0, $r, $i++);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(1, $r, $row['component_type']);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(2, $r, $row['component_name']);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(3, $r, $row['required_quantity']);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(4, $r, $row['issued_quantity']);
+            $r++;
+        }
+        $objWriter = IOFactory::createWriter($objPHPExcel, 'Excel2007');
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment;filename=".$file_name);
+        header('Cache-Control: max-age=0');
+        $objWriter->save('php://output');
+        
+        }
+        
+        else {
+            
+        $this->load->library('phpexcel');
+        $this->load->library('PHPExcel/IOFactory');
+        $objPHPExcel = new phpexcel();
+        $bom_details = $this->model_admin->get_assembled_bom_details($bom_no);
+        $bom_table_name =  strtolower($bom_details['bom_name']."_".$bom_details['model_grade']."_".$bom_details['bom_model_no']."_".$bom_details['date_of_assembly']."_".$bom_details['no_of_components']);       //eg:  athil_em_431_2031-12-23_5   
+        //'component_type, component_name, required_quantity'
+        //echo $bom_table_name;
+        //print_r($bom_details);
+        $components = $this->model_admin->get_components_of_bom($bom_table_name);
+        $file_name = $bom_table_name.".xlsx";
+        //print_r($components);
+        $objPHPExcel->getProperties()->setCreator($this->session->userdata('name')); //author the excel file
+        $objPHPExcel->getActiveSheet()->mergeCells('A1:D1');
+        $objPHPExcel->getActiveSheet()->setCellValue('A1', $bom_table_name);
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(0, 2, "component_no"); //insert column headings
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(1, 2, "component_type");
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(2, 2, "component_name");
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(3, 2, "required_quantity");
+        /*if($bom_details['bom_status'] == "APPROVED") {
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(4, 2, "issued_quantity");
+        }*/
+        
+        $objPHPExcel->getActiveSheet()->getColumnDimension("A")->setAutoSize(true); //auto width
+        $objPHPExcel->getActiveSheet()->getColumnDimension("B")->setAutoSize(true);
+        $objPHPExcel->getActiveSheet()->getColumnDimension("C")->setAutoSize(true);
+        $objPHPExcel->getActiveSheet()->getColumnDimension("D")->setAutoSize(true);
+        /*if($bom_details['bom_status'] == "APPROVED") {
+            $objPHPExcel->getActiveSheet()->getColumnDimension("E")->setAutoSize(true);
+        }*/
+        
+        $objPHPExcel->getActiveSheet()->getStyle("A1")->applyFromArray(array(
+                                                                        "font" => array(
+                                                                                        "bold" => true
+                                                                                        ), 
+                                                                        "alignment" => array(
+                                                                                            "horizontal" => PHPExcel_Style_Alignment::HORIZONTAL_CENTER
+                                                                                            ),
+                                                                        "fill" => array(
+                                                                                        "type" => PHPExcel_Style_Fill::FILL_SOLID,
+                                                                                        "startcolor" => array(
+                                                                                                                "rgb" => "3C8DBC"
+                                                                                                                )
+                                                                                        ),
+                                                                        "borders" => array(
+                                                                                            "allborders" => array(
+                                                                                                                    "style" => PHPExcel_Style_Border::BORDER_THIN
+                                                                                                                    )
+                                                                                            )
+                                                                        ));
+        $objPHPExcel->getActiveSheet()->getStyle("A2:D2")->applyFromArray(array(
+                                                                        "font" => array(
+                                                                                        "bold" => true
+                                                                                        ), 
+                                                                        "alignment" => array(
+                                                                                            "horizontal" => PHPExcel_Style_Alignment::HORIZONTAL_CENTER
+                                                                                            ),
+                                                                        "fill" => array(
+                                                                                        "type" => PHPExcel_Style_Fill::FILL_SOLID,
+                                                                                        "startcolor" => array(
+                                                                                                                "rgb" => "00A65A"
+                                                                                                                )
+                                                                                        ),
+                                                                        "borders" => array(
+                                                                                            "allborders" => array(
+                                                                                                                    "style" => PHPExcel_Style_Border::BORDER_THIN
+                                                                                                                    )
+                                                                                            )
+                                                                        ));
+        $r = 3;
+        $i = 1;
+        foreach($components as $row){
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(0, $r, $i++);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(1, $r, $row['component_type']);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(2, $r, $row['component_name']);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(3, $r, $row['required_quantity']);
+         /*   if($bom_details['bom_status'] == "APPROVED") {
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(4, $r, $row['issued_quantity']);
+            }
+           */ 
+            $r++;
+        }
+        $objWriter = IOFactory::createWriter($objPHPExcel, 'Excel2007');
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment;filename=".$file_name);
+        header('Cache-Control: max-age=0');
+        $objWriter->save('php://output');
+    }
+        
+}
+    
+    
     
     
     
@@ -782,11 +1090,13 @@ class Admin extends CI_Controller {
     
     
     public function calendar(){
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         if($this->session->userdata('user_status')){
             $this->page_data['users'] = $this->model_admin->get_users('user');
+            $this->page_data["page_content"] = $this->load->view('fail_alert_view',$this->page_data,TRUE);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;
             $this->load->view('admin/admin_calendar_view',$this->page_data);
             //print_r($this->page_data);           
         }
@@ -797,7 +1107,7 @@ class Admin extends CI_Controller {
     }
     
     public function calendar_add_dropped_event()  {
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
        $event_data = $this->input->post('event_data');
@@ -807,7 +1117,7 @@ class Admin extends CI_Controller {
     }
     
     public function calendar_get_events() {
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         $events = $this->model_admin->get_calendar_events();
@@ -815,7 +1125,7 @@ class Admin extends CI_Controller {
     }
     
     public function insert_into_calendar($title, $start, $type){
-        if(!$this->session->userdata('user_status')){
+        if((!$this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'admin')){
         $this->login();
         }
         switch($type) {
@@ -833,14 +1143,88 @@ class Admin extends CI_Controller {
                                 break;
             case 'bom_rejected' : $color = 'rgb(96,92,168)'; 
                                 break;
-            case 'rescreen_submitted' : $color = 'rgb(114,175,210)'; 
+            case 'rescreen_pending' : $color = 'rgb(114,175,210)'; 
                                 break;
             case 'rescreen_completed' : $color = 'rgb(0,31,63)'; 
+                                break;
+            case 'rescreen_approved' : $color = 'rgb(210,214,222)';
                                 break;
         }
         
         $this->model_admin->insert_event($title, $start, $color);
     }
+    
+    
+    
+    
+    
+    
+    
+    //*************MESSAGES*****************
+    
+    
+    
+    public function message($receiver_name = null) {                        //new
+        $users = $this->model_admin->get_all_user_names();
+        $this->page_data['user_names'] = $users;
+        
+       
+       if($this->input->post()) { 
+        $receiver_name = $this->input->post('receiver_name');
+        $sender_name = $this->session->userdata('user_name');
+        $message_details = $this->model_admin->get_message_by_sender_name_receiver_name($sender_name, $receiver_name);
+        $this->page_data['message_details'] = $message_details;
+        
+       }
+       
+        else {
+        
+        if($receiver_name != null) {    
+        $sender_name = $this->session->userdata('user_name');
+        $message_details = $this->model_admin->get_message_by_sender_name_receiver_name($sender_name, $receiver_name);
+        $this->page_data['message_details'] = $message_details;
+           
+       }
+        
+        else if($receiver_name == null) {
+        $users = $this->model_admin->get_all_user_names();
+        $receiver_name = $users['0']['user_name'];     
+        $sender_name = $this->session->userdata('user_name');
+        $message_details = $this->model_admin->get_message_by_sender_name_receiver_name($sender_name, $receiver_name);
+        $this->page_data['message_details'] = $message_details;
+       
+       }
+        
+           
+            
+       }
+        $this->page_data['receiver_name'] = $receiver_name;
+    
+        if(isset($this->page_data['page_content'])){
+            unset($this->page_data['page_content']);
+        }
+        
+        $this->page_data["page_content"] = $this->load->view('admin/admin_message_view',$this->page_data,TRUE);
+        $notification_details = $this->model_admin->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_admin->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('admin/admin_main_view',$this->page_data);
+                 
+    }
+     
+
+        
+    public function add_message() {                                                         //new
+        $message = $this->input->post('message');
+        $receiver_name = $this->input->post('receiver_name');
+        $sender_name = $this->session->userdata('user_name');
+        $this->model_admin->insert_message($sender_name, $receiver_name, $message);
+        $this->message($receiver_name);
+        }
+    
+    
+    
+
+    
+    
+    
     
 
 }

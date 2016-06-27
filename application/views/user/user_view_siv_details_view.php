@@ -95,13 +95,23 @@
 
       <!-- this row will not appear when printing -->
       <div class="row no-print">
-        <div class="col-xs-4">
-          <a href="<?php echo base_url().'user/print_siv/'.$siv_details['siv_no']; ?>" target="_blank" class="btn btn-default"><i class="fa fa-print"></i> Print</a>
-        </div>
-        <div class="col-xs-4">
-          <a href="<?php echo base_url().'user/siv_save_as_excel/'.$siv_details['siv_no']; ?>" class="btn btn-default btn-primary"><i class="fa fa-file-excel-o"></i> Save As Excel</a>
+          <?php
+   
+          if($this->session->userdata('print_excel') == 1){
+              
+              echo "<div class=\"col-xs-4\">
+          <a href=\"".base_url().'user/print_siv/'.$siv_details['siv_no']."\" target=\"_blank\" class=\"btn btn-default\"><i class=\"fa fa-print\"></i> Print</a>
+        </div>";
+              
+              echo "<div class=\"col-xs-4\">
+          <a href=\"".base_url()."user/siv_save_as_excel/".$siv_details['siv_no']."\" class=\"btn btn-default btn-primary\"><i class=\"fa fa-file-excel-o\"></i> Save As Excel</a>";
             
-        </div>
+        echo "</div>";
+          }
+          ?>
+          
+
+        
         <?php
             if(strcmp($siv_details['siv_status'],'PENDING_APPROVAL') == 0){
                 echo "<div class=\"col-xs-4\">\n"; 

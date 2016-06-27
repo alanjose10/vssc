@@ -24,7 +24,7 @@
                     <div class="box-body no-padding table-responsive">
                         <table class="table table-hover table-bordered">
                             <thead>
-                            <tr class="bg-blue">
+                            <tr class="bg-gray">
                                 <th>SIV No.</th>
                                 <th>SIV Grade</th>
                                 <th>Date Of Issue</th>

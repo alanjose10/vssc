@@ -209,6 +209,36 @@ class Model_verifier extends CI_Model {
         return $query->result_array();
     }
     
+    public function get_bom_by_bom_no ($bom_no) {
+        $query = $this->db->get_where('bom_status',array(
+                                            'bom_no' => $bom_no
+                                                ));
+        $result = $query->row_array();
+        return $result;
+    }
+    
+    
+    public function get_components_of_bom($bom_table_name)  {                                   //save as excel for rejected and pending
+        $this->db->select('component_type, component_name, required_quantity');
+        $this->db->where('required_quantity !=', 0);
+        $query = $this->db->get($bom_table_name);
+        //print_r($query->result_array());
+        $results = $query->result_array();
+       // print_r ($results);
+        return $results;
+    }
+    
+    public function get_components_of_bom_approved($bom_table_name)  {                          //save as excel for approved new
+        $this->db->select('component_type, component_name, required_quantity, issued_quantity');
+        $this->db->where('required_quantity !=', 0);
+        $query = $this->db->get($bom_table_name);
+        //print_r($query->result_array());
+        $results = $query->result_array();
+       // print_r ($results);
+        return $results;
+    
+    }
+    
     public function reserve_approved_bom($bom_details, $component_details)  {
         switch($bom_details['model_grade']){
             case 'EM': $table_name = 'em_master_table';
@@ -216,6 +246,7 @@ class Model_verifier extends CI_Model {
             case 'FM': $table_name = 'fm_master_table';
                         break;
         }
+        $new_row = array();             //new!!!!!!!!!!!!!!!!!!!
         //$back_track = array();  //store dates for backtracking components to respective dates
         $new_db = array();
         //$new_component_details = array();
@@ -289,13 +320,14 @@ class Model_verifier extends CI_Model {
                     }
                 }
                 
+                $new_db[] = $new_row;       //store row of new db values
             }
             else{
                 //component does not exist in inventory
                 $new_component_details_row['issued_quantity'] = 0;        //0 quantity is issued.
             }
             $new_component_details[] = $new_component_details_row;
-            $new_db[] = $new_row;       //store row of new db values
+            
             //$back_track[] = $back_track_row;    //store each row to backtrack array
         }   //main loop
         /*
@@ -427,7 +459,24 @@ class Model_verifier extends CI_Model {
     
     
     
-    
+    public function delete_assembled_bom($bom_no){
+        $this->load->dbforge();
+        $this->db->select('table_name');
+        $this->db->where('bom_no',$bom_no);
+        $query = $this->db->get('bom_status');
+        $result = $query->row_array();
+        //print_r($result);
+        $table_name = $result['table_name'];
+        //echo $table_name;
+        if($this->db->delete('bom_status',array(
+                                            'bom_no' => $bom_no
+                                            ))){
+            if($this->dbforge->drop_table($table_name)){
+                return true;
+            }
+        }
+    return false;
+    }
     
     
     
@@ -640,9 +689,7 @@ class Model_verifier extends CI_Model {
         $this->db->where('component_name', $rescreen_array['component_name']);
         $query = $this->db->get($master_table_name);
         $result = $query->row_array();
-        echo "<pre>";
-        print_r($result);
-        echo "</pre>";
+
         $total = $result['total'] - $rescreen_array['component_quantity'];
         
         $this->db->set('total', $total);
@@ -655,6 +702,162 @@ class Model_verifier extends CI_Model {
             }
         }
     }
+    
+    public function get_rescreens($type){
+        $this->db->where('rescreen_status', $type);
+        $query = $this->db->get('rescreens');
+        $result = $query->result_array();
+        return $result;
+    }
+    
+    public function get_rescreen_data($rescreen_id){
+        $this->db->where('rescreen_id', $rescreen_id);
+        $query = $this->db->get('rescreens');
+        $result = $query->row_array();
+        return $result;
+    }
+    
+    public function approve_rescreen($rescreen_id){
+        $rescreen_data = $this->get_rescreen_data($rescreen_id);
+        switch($rescreen_data['grade']){
+            case 'EM': $master_table_name = "em_master_table";
+                        break;
+            case 'FM': $master_table_name = "fm_master_table";
+                        break;
+        }
+        
+        if(!$this->db->field_exists($rescreen_data['date_of_expiry'], $master_table_name)){
+            $this->load->dbforge();
+            $this->dbforge->add_column($master_table_name, array(
+                                                                $rescreen_data['date_of_expiry'] => array(
+                                                                                                        'type' =>'INT',
+                                                                                                        'default' => '0'
+                                                                                                        )
+                                                                    ));
+        }
+        
+        $this->db->where('component_type', $rescreen_data['component_type']);
+        $this->db->where('component_name', $rescreen_data['component_name']);
+        $query = $this->db->get($master_table_name);
+        $result = $query->row_array();
+        $total = $result['total'] + $rescreen_data['component_quantity'];
+        $date = $result[$rescreen_data['date_of_expiry']] + $rescreen_data['component_quantity'];
+        $this->db->set('total', $total);
+        $this->db->set($rescreen_data['date_of_expiry'], $date);
+        $this->db->where('component_type', $rescreen_data['component_type']);
+        $this->db->where('component_name', $rescreen_data['component_name']);
+        if($this->db->update($master_table_name)){
+            $this->db->set('rescreen_status', 'RESCREEN_APPROVED');
+            $this->db->where('rescreen_id', $rescreen_id);
+            if($this->db->update('rescreens')){
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    
+    
+    
+    
+    
+    
+    //*********************MESSAGES********************
+    
+    
+    public function get_message_by_sender_name_receiver_name ($sender_name, $receiver_name) {              //message new
+        
+        $this->db->order_by('msg_no', 'DESC');
+        $this->db->select('sender_name, receiver_name, message, date, time, status');
+        $this->db->where("(sender_name = '$sender_name' AND receiver_name = '$receiver_name')
+                    OR (sender_name = '$receiver_name' AND receiver_name = '$sender_name')");
+                               
+        $query = $this->db->get('message_details');
+        $result = $query->result_array();
+         $row_count = $query->num_rows();
+        //if($sender_name == array_column[$result, 'receiver_name'])
+        for($x=0; $x<$row_count; $x++) {
+            if($sender_name == $result[$x]['receiver_name']) {
+        $this->db->where("(sender_name = '$receiver_name' AND receiver_name = '$sender_name')");
+        $this->db->update('message_details', array(
+                                            'status' => 'seen'
+                                            ));
+                        
+            }
+        }
+        //print_r($result);
+        return $result;
+         
+      }
+   
+    public function get_all_user_names(){                                                       //message new
+        $sender_name = $this->session->userdata('user_name');
+        //$this->db->select('user_name');
+        $this->db->distinct('user_name');
+        $this->db->where("(user_name != '$sender_name')");
+        $query = $this->db->get('users');
+        $result = $query->result_array();
+        //print_r($result);
+        return $result;  
+    }
+    
+    public function insert_message($sender_name, $receiver_name, $message){                         //message new
+
+        date_default_timezone_set('asia/kolkata');
+        //$date = date('m/d/Y h:i:s a', time());
+        //date_default_timezone_set("America/New_York");
+        $time=date("h:i:sa");
+        $date = date("Y/m/d");
+        $this->db->set('sender_name', $sender_name);
+        $this->db->set('receiver_name', $receiver_name);
+        $this->db->set('message', $message);
+        //echo ($message);
+        $this->db->set('time', $time);
+        $this->db->set('date', $date);
+        $this->db->set('status', "unseen");
+        $this->db->insert('message_details');
+        
+        
+    }
+    
+    public function get_message_notification_details(){
+        $sender_name = $this->session->userdata('user_name');
+        $this->db->order_by('msg_no', 'DESC');
+        $this->db->distinct();
+        $this->db->select('sender_name');//, message, date, time, status
+        $this->db->where("(receiver_name = '$sender_name' AND status = 'unseen')");
+        $query = $this->db->get('message_details');
+        //$row_count = $query->num_rows();
+        $result = $query->result_array();
+        
+       // $result['count'] = $row_count; 
+        //$row_count = $query->num_rows();
+        //print_r($result);
+        return $result;
+        
+    }
+    
+    
+    public function get_message_count(){
+        $sender_name = $this->session->userdata('user_name');
+        $this->db->order_by('msg_no', 'DESC');
+        $this->db->distinct();
+        $this->db->select('sender_name');//, message, date, time, status
+        $this->db->where("(receiver_name = '$sender_name' AND status = 'unseen')");
+        $query = $this->db->get('message_details');
+        $row_count = $query->num_rows();
+        $result = $row_count;
+        
+        //$result['count'] = $row_count; 
+        //$row_count = $query->num_rows();
+        //print_r($result);
+        return $result;
+        
+    }
+    
+    
+    
+    
     
     
     

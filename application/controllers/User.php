@@ -11,12 +11,12 @@ class User extends CI_Controller {
     }
     
     public function index(){
-            $this->login();
+            redirect("user/login");
     }
     
     public function login() {
-        if($this->session->userdata('user_status')){
-            $this->dashboard();
+        if(($this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'user')){
+           redirect('user/dashboard');
         }
         else{
             $this->load->view('login');
@@ -25,6 +25,9 @@ class User extends CI_Controller {
 
     
     public function login_validation() {
+        if(($this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'user')){
+            redirect('user/dashboard');
+        }
             if($this->input->post()){             
                 $this->load->library('form_validation');
                 $this->form_validation->set_rules('username', 'Username', 'required');
@@ -37,7 +40,7 @@ class User extends CI_Controller {
                     if($this->model_user->login()){
                         $this->model_user->update_userdata();
                         $this->model_user->get_user_privileges();
-                        $this->dashboard();
+                        redirect('user/dashboard');
                     }
                     else{
                         $data = array(
@@ -64,6 +67,10 @@ class User extends CI_Controller {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('fail_alert_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
         $this->load->view('user/user_main_view',$this->page_data);
     }
     
@@ -73,22 +80,43 @@ class User extends CI_Controller {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('success_alert_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
         $this->load->view('user/user_main_view',$this->page_data);
     }
     
     public function dashboard() {
+        $this->page_data["message"] = $this->model_user->get_message_count();
+        $this->page_data["pending_approval_siv_no"] = $this->model_user->get_no_of_siv('PENDING_APPROVAL');
+        $this->page_data["approved_siv_no"] = $this->model_user->get_no_of_siv('APPROVED');
+        $this->page_data["rejected_siv_no"] = $this->model_user->get_no_of_siv('REJECTED');
+        $this->page_data["pending_approval_bom_no"] = $this->model_user->get_no_of_bom('PENDING_APPROVAL');
+        $this->page_data["approved_bom_no"] = $this->model_user->get_no_of_bom('APPROVED');
+        $this->page_data["rejected_bom_no"] = $this->model_user->get_no_of_bom('REJECTED');
+        $this->page_data["no_of_uploaded_boms"] = $this->model_user->get_no_of_uploaded_bom();
+        $this->page_data["no_of_calendar_events"] = $this->model_user->get_no_of_calendar_events();
+        $this->page_data["no_of_eg_to_expire"] = $this->model_user->get_no_of_components_to_expire_in_3('em');
+        $this->page_data["no_of_fg_to_expire"] = $this->model_user->get_no_of_components_to_expire_in_3('fm');
+        
         $this->model_user->get_user_privileges();
-        if($this->session->userdata('user_status')){
+        if(($this->session->userdata('user_status')) && ($this->session->userdata('user_type') == 'user')){
             if(isset($this->page_data['page_content'])){
                 unset($this->page_data['page_content']);
             }
             //$this->page_data["page_content"] = $this->load->view('user/ul_user_enter_bom_view',$this->page_data,TRUE);
             $this->page_data["page_content"] = $this->load->view('user/user_dashboard_view',$this->page_data,TRUE);
+            $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+            
             $this->load->view('user/user_main_view',$this->page_data);
             //print_r($this->page_data); 
         }
         else {
-            $this->login();
+            redirect("user/login");
         }
     }
 
@@ -108,7 +136,7 @@ class User extends CI_Controller {
     
     
 public function new_siv() {
-    if(!$this->session->userdata('user_status')){
+    if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
         $this->login();
     }
         if($this->input->post('submit')){
@@ -139,6 +167,11 @@ public function new_siv() {
                         unset($this->page_data['page_content']);
                     }
                     $this->page_data["page_content"] = $this->load->view('user/user_new_siv_2',$this->page_data,TRUE);
+                    $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+            
                     $this->load->view('user/user_main_view',$this->page_data);
                 }
                  else{
@@ -151,6 +184,11 @@ public function new_siv() {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('user/user_new_siv_1',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+             
         $this->load->view('user/user_main_view',$this->page_data);
     }
             
@@ -159,7 +197,7 @@ public function new_siv() {
     
     
     public function new_siv_components() {
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         if($this->input->post('submit')){
@@ -215,7 +253,7 @@ public function new_siv() {
     }
     
     public function view_issued_siv_list(){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $this->page_data['issued_siv'] = $this->model_user->get_issued_siv();
@@ -225,11 +263,37 @@ public function new_siv() {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('user/user_issued_siv_list_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+             
         $this->load->view('user/user_main_view',$this->page_data);
     }
     
+    public function view_siv_list($type) {
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
+        $this->login();
+        }
+        //echo $type;
+        $this->page_data['type'] = $type;
+        $this->page_data['issued_siv'] = $this->model_user->get_issued_siv_by_type($type);
+        //print_r($this->page_data['siv']);
+        if(isset($this->page_data['page_content'])){
+            unset($this->page_data['page_content']);
+        }
+        $this->page_data["page_content"] = $this->load->view('user/user_issued_siv_list_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+             
+        $this->load->view('user/user_main_view',$this->page_data);
+    }
+    
+    
     public function view_full_siv($siv_no) {
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $siv_details = $this->model_user->get_siv_by_siv_no($siv_no);
@@ -243,13 +307,18 @@ public function new_siv() {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('user/user_view_siv_details_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+             
         $this->load->view('user/user_main_view',$this->page_data);
         
     }
     
     
     public function print_siv($siv_no) {
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $siv_details = $this->model_user->get_siv_by_siv_no($siv_no);
@@ -262,7 +331,7 @@ public function new_siv() {
     }
     
     public function delete_issued_siv($siv_no){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $siv_details = $this->model_user->get_siv_by_siv_no($siv_no);
@@ -276,7 +345,7 @@ public function new_siv() {
     }
     
     public function siv_save_as_excel($siv_no){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $this->load->library('phpexcel');
@@ -373,7 +442,7 @@ public function new_siv() {
     
     
     public function choose_bom_for_entry() {                              //<!--Made by Pooch-->  
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $this->page_data['uploaded_boms'] = $this->model_user->get_uploaded_boms();
@@ -381,26 +450,36 @@ public function new_siv() {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('user/user_choose_uploaded_bom_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+             
         $this->load->view('user/user_main_view',$this->page_data);
     }
     
     public function enter_bom_details($bom_no) {                        //<!--Made by Pooch-->
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $bom_details = $this->model_user->get_bom_by_bom_no($bom_no);
         $table_name = strtolower("BOM_".$bom_details['bom_name']."_".$bom_details['model_type']);
-        $this->page_data['components'] = $this->model_user->get_components_of_bom($table_name);
+        $this->page_data['components'] = $this->model_user->get_components_of_uploaded_bom($table_name);
         $this->page_data['bom_details'] = $bom_details;
         if(isset($this->page_data['page_content'])){
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('user/user_enter_bom_components_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+             
         $this->load->view('user/user_main_view',$this->page_data);
     }
     
     public function store_entered_bom(){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         if($this->input->post()){
@@ -436,7 +515,7 @@ public function new_siv() {
                 if($this->model_user->enter_new_bom($bom_details, $component_details)){
                     $title = "BOM_".$bom_details['bom_name']."-".$bom_details['model_grade']."-".$bom_details['bom_model_no'];
                     $this->insert_into_calendar($title, date("Y-m-d") , 'bom_entered');
-                    $this->print_success("BOM Entered Successfully.");
+                    redirect('user/print_success/BOM_Entered_Successfully.');
                 }
                 else {
                     $this->print_error("Error! Please check and try again.");
@@ -449,7 +528,7 @@ public function new_siv() {
     }
     
     public function view_assembled_bom_list(){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $this->page_data['assembled_bom'] = $this->model_user->get_assembled_bom();
@@ -457,6 +536,27 @@ public function new_siv() {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('user/user_assembled_bom_list_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+        $this->load->view('user/user_main_view',$this->page_data);
+    }
+    
+    public function view_assembled_bom_list_by_type($type){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
+            $this->login();
+        }
+        $this->page_data['assembled_bom'] = $this->model_user->get_assembled_bom_by_type($type);
+        if(isset($this->page_data['page_content'])){
+            unset($this->page_data['page_content']);
+        }
+        $this->page_data["page_content"] = $this->load->view('user/user_assembled_bom_list_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+             
         $this->load->view('user/user_main_view',$this->page_data);
     }
     
@@ -465,7 +565,7 @@ public function new_siv() {
     
     
     public function view_assembled_bom_full($bom_no){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $bom_details = $this->model_user->get_assembled_bom_details($bom_no);
@@ -479,11 +579,11 @@ public function new_siv() {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('user/user_view_assembled_bom_details_view',$this->page_data,TRUE);
-        $this->load->view('user/user_main_view',$this->page_data);
+        $notification_details = $this->model_user->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_user->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('user/user_main_view',$this->page_data);
     }
     
     public function print_assembled_bom($bom_no){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $bom_details = $this->model_user->get_assembled_bom_details($bom_no);
@@ -496,43 +596,141 @@ public function new_siv() {
     }
     
     public function delete_assembled_bom($bom_no){    
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
             if($this->model_user->delete_assembled_bom($bom_no)){
-                $this->print_success("BOM Successfully Deleted.");
+                redirect('user/print_success/BOM_Successfully_Deleted.');
             }
             else {
                 $this->print_error("BOM Delete Failed!");
             }
     }
     
-    public function assembled_bom_save_as_excel($bom_no){           //not working!
-        if(!$this->session->userdata('user_status')){
-            $this->login();
+    
+    
+    public function assembled_bom_save_as_excel($bom_no) {     //save as excel for approved, rejected and pending
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
+        $this->login();
         }
+        $bom_details = $this->model_user->get_bom_by_bom_no($bom_no);
+        if($bom_details['bom_status'] == "APPROVED") {
         $this->load->library('phpexcel');
         $this->load->library('PHPExcel/IOFactory');
         $objPHPExcel = new phpexcel();
-        $bom_details = $this->model_user->get_assembled_bom_details($bom_no);
-        print_r($bom_details);
-        $table_name = $bom_details['table_name'];
-        echo $table_name;
-        $components = $this->model_user->get_assembled_bom_components($table_name);
-        $file_name = $table_name.".xlsx";
+        $bom_details = $this->model_user->get_bom_by_bom_no($bom_no);
+        $bom_table_name =  strtolower($bom_details['bom_name']."_".$bom_details['model_grade']."_".$bom_details['bom_model_no']."_".$bom_details['date_of_assembly']."_".$bom_details['no_of_components']);       //eg:  athil_em_431_2031-12-23_5   
+        //'component_type, component_name, required_quantity'
+        //echo $bom_table_name;
+        //print_r($bom_details);
+        $components = $this->model_user->get_components_of_bom_approved($bom_table_name);
+        $file_name = $bom_table_name.".xlsx";
         //print_r($components);
-        //echo $file_name;
         $objPHPExcel->getProperties()->setCreator($this->session->userdata('name')); //author the excel file
-        $objPHPExcel->getActiveSheet()->mergeCells('A1:D1');
-        $objPHPExcel->getActiveSheet()->setCellValue('A1', $table_name);
-        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(0, 2, "component_no");
-        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(1, 2, "component_type"); //insert column headings
+        $objPHPExcel->getActiveSheet()->mergeCells('A1:E1');
+        $objPHPExcel->getActiveSheet()->setCellValue('A1', $bom_table_name);
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(0, 2, "component_no"); //insert column headings
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(1, 2, "component_type");
         $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(2, 2, "component_name");
         $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(3, 2, "required_quantity");
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(4, 2, "issued_quantity");
+        
+        
         $objPHPExcel->getActiveSheet()->getColumnDimension("A")->setAutoSize(true); //auto width
         $objPHPExcel->getActiveSheet()->getColumnDimension("B")->setAutoSize(true);
         $objPHPExcel->getActiveSheet()->getColumnDimension("C")->setAutoSize(true);
         $objPHPExcel->getActiveSheet()->getColumnDimension("D")->setAutoSize(true);
+        $objPHPExcel->getActiveSheet()->getColumnDimension("E")->setAutoSize(true);
+        
+        
+        $objPHPExcel->getActiveSheet()->getStyle("A1")->applyFromArray(array(
+                                                                        "font" => array(
+                                                                                        "bold" => true
+                                                                                        ), 
+                                                                        "alignment" => array(
+                                                                                            "horizontal" => PHPExcel_Style_Alignment::HORIZONTAL_CENTER
+                                                                                            ),
+                                                                        "fill" => array(
+                                                                                        "type" => PHPExcel_Style_Fill::FILL_SOLID,
+                                                                                        "startcolor" => array(
+                                                                                                                "rgb" => "3C8DBC"
+                                                                                                                )
+                                                                                        ),
+                                                                        "borders" => array(
+                                                                                            "allborders" => array(
+                                                                                                                    "style" => PHPExcel_Style_Border::BORDER_THIN
+                                                                                                                    )
+                                                                                            )
+                                                                        ));
+        $objPHPExcel->getActiveSheet()->getStyle("A2:E2")->applyFromArray(array(
+                                                                        "font" => array(
+                                                                                        "bold" => true
+                                                                                        ), 
+                                                                        "alignment" => array(
+                                                                                            "horizontal" => PHPExcel_Style_Alignment::HORIZONTAL_CENTER
+                                                                                            ),
+                                                                        "fill" => array(
+                                                                                        "type" => PHPExcel_Style_Fill::FILL_SOLID,
+                                                                                        "startcolor" => array(
+                                                                                                                "rgb" => "00A65A"
+                                                                                                                )
+                                                                                        ),
+                                                                        "borders" => array(
+                                                                                            "allborders" => array(
+                                                                                                                    "style" => PHPExcel_Style_Border::BORDER_THIN
+                                                                                                                    )
+                                                                                            )
+                                                                        ));
+        $r = 3;
+        $i = 1;
+        foreach($components as $row){
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(0, $r, $i++);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(1, $r, $row['component_type']);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(2, $r, $row['component_name']);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(3, $r, $row['required_quantity']);
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(4, $r, $row['issued_quantity']);
+            $r++;
+        }
+        $objWriter = IOFactory::createWriter($objPHPExcel, 'Excel2007');
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment;filename=".$file_name);
+        header('Cache-Control: max-age=0');
+        $objWriter->save('php://output');
+        
+        }
+        
+        else {
+            
+        $this->load->library('phpexcel');
+        $this->load->library('PHPExcel/IOFactory');
+        $objPHPExcel = new phpexcel();
+        $bom_details = $this->model_user->get_assembled_bom_by_bom_no($bom_no);
+        $bom_table_name =  strtolower($bom_details['bom_name']."_".$bom_details['model_grade']."_".$bom_details['bom_model_no']."_".$bom_details['date_of_assembly']."_".$bom_details['no_of_components']);       //eg:  athil_em_431_2031-12-23_5   
+        //'component_type, component_name, required_quantity'
+        //echo $bom_table_name;
+        //print_r($bom_details);
+        $components = $this->model_user->get_components_of_bom($bom_table_name);
+        $file_name = $bom_table_name.".xlsx";
+        //print_r($components);
+        $objPHPExcel->getProperties()->setCreator($this->session->userdata('name')); //author the excel file
+        $objPHPExcel->getActiveSheet()->mergeCells('A1:D1');
+        $objPHPExcel->getActiveSheet()->setCellValue('A1', $bom_table_name);
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(0, 2, "component_no"); //insert column headings
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(1, 2, "component_type");
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(2, 2, "component_name");
+        $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(3, 2, "required_quantity");
+        /*if($bom_details['bom_status'] == "APPROVED") {
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(4, 2, "issued_quantity");
+        }*/
+        
+        $objPHPExcel->getActiveSheet()->getColumnDimension("A")->setAutoSize(true); //auto width
+        $objPHPExcel->getActiveSheet()->getColumnDimension("B")->setAutoSize(true);
+        $objPHPExcel->getActiveSheet()->getColumnDimension("C")->setAutoSize(true);
+        $objPHPExcel->getActiveSheet()->getColumnDimension("D")->setAutoSize(true);
+        /*if($bom_details['bom_status'] == "APPROVED") {
+            $objPHPExcel->getActiveSheet()->getColumnDimension("E")->setAutoSize(true);
+        }*/
+        
         $objPHPExcel->getActiveSheet()->getStyle("A1")->applyFromArray(array(
                                                                         "font" => array(
                                                                                         "bold" => true
@@ -578,6 +776,10 @@ public function new_siv() {
             $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(1, $r, $row['component_type']);
             $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(2, $r, $row['component_name']);
             $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(3, $r, $row['required_quantity']);
+         /*   if($bom_details['bom_status'] == "APPROVED") {
+            $objPHPExcel->getActiveSheet()->setCellValueByColumnAndRow(4, $r, $row['issued_quantity']);
+            }
+           */ 
             $r++;
         }
         $objWriter = IOFactory::createWriter($objPHPExcel, 'Excel2007');
@@ -586,8 +788,8 @@ public function new_siv() {
         header('Cache-Control: max-age=0');
         $objWriter->save('php://output');
     }
-    
-    
+        
+    }    
     
     
     
@@ -595,7 +797,7 @@ public function new_siv() {
     
     
     public function create_bom_user() {                        
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         if($this->input->post()) {
@@ -631,13 +833,18 @@ public function new_siv() {
                 unset($this->page_data['page_content']);
             }
             $this->page_data["page_content"] = $this->load->view('user/user_create_bom_view',$this->page_data,TRUE);
+            $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+             
             $this->load->view('user/user_main_view',$this->page_data);
             
         }
     }
     
     public function read_bom_excel($bom_details) {
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $file = "./uploads/BOM_".$bom_details['bom_name']."_".$bom_details['model_type'].".xlsx";
@@ -681,7 +888,7 @@ public function new_siv() {
         if($this->model_user->create_bom($bom_details, $file_data_new, $table_name)){
             //$this->get_session_details();
             $this->insert_into_calendar($table_name, date("Y-m-d") , 'bom_created');
-            $this->print_success("BOM Successfully Created.");
+            redirect('user/print_success/BOM_Successfully_Created.');
         }
         else{
             //$this->get_session_details();
@@ -690,7 +897,7 @@ public function new_siv() {
     }
     
     public function download_bom_template(){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $this->load->helper('download');
@@ -700,7 +907,7 @@ public function new_siv() {
     }
     
     public function view_uploaded_bom_list(){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $this->page_data['uploaded_boms'] = $this->model_user->get_uploaded_boms();
@@ -710,16 +917,21 @@ public function new_siv() {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('user/user_uploaded_bom_list_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+             
         $this->load->view('user/user_main_view',$this->page_data);
     }
     
     public function view_full_bom($bom_no) {
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $bom_details = $this->model_user->get_bom_by_bom_no($bom_no);
         $bom_table_name = strtolower("bom_".$bom_details['bom_name']."_".$bom_details['model_type']);
-        $component_details = $this->model_user->get_components_of_bom($bom_table_name);
+        $component_details = $this->model_user->get_components_of_uploaded_bom($bom_table_name);
         //print_r($component_details);
         //print_r($bom_details);
         $this->page_data['bom_details'] = $bom_details;
@@ -728,17 +940,22 @@ public function new_siv() {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('user/user_view_bom_details_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+             
         $this->load->view('user/user_main_view',$this->page_data);
         
     }
     
     public function print_bom($bom_no) {    
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $bom_details = $this->model_user->get_bom_by_bom_no($bom_no);
         $bom_table_name = strtolower("bom_".$bom_details['bom_name']."_".$bom_details['model_type']);
-        $component_details = $this->model_user->get_components_of_bom($bom_table_name);
+        $component_details = $this->model_user->get_components_of_uploaded_bom($bom_table_name);
         $bom_details['date_of_creation'] = preg_replace("!([0-9]{4})-([0-9]{2})-([0123][0-9])!", "$3/$2/$1", $bom_details['date_of_creation']);         //yyyy-mm-dd -> dd/mm/yyyy
         //print_r($bom_details);
         $this->page_data['bom_details'] = $bom_details;
@@ -748,11 +965,11 @@ public function new_siv() {
     }
     
     public function delete_uploaded_bom($bom_no){    
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
             if($this->model_user->delete_uploaded_bom($bom_no)){
-                $this->print_success("BOM Successfully Deleted.");
+                redirect('user/print_success/BOM_Successfully_Deleted');
             }
             else {
                 $this->print_error("BOM Delete Failed!");
@@ -770,15 +987,19 @@ public function new_siv() {
     
     
     public function calendar(){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         //$this->page_data['users'] = $this->model_user->get_users('user');
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
         $this->load->view('user/user_calendar_view',$this->page_data);
     }
     
     public function calendar_get_events() {
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
 
@@ -787,7 +1008,7 @@ public function new_siv() {
     }
     
     public function insert_into_calendar($title, $start, $type){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         switch($type) {
@@ -805,9 +1026,11 @@ public function new_siv() {
                                 break;
             case 'bom_rejected' : $color = 'rgb(96,92,168)'; 
                                 break;
-            case 'rescreen_submitted' : $color = 'rgb(114,175,210)'; 
+            case 'rescreen_pending' : $color = 'rgb(114,175,210)'; 
                                 break;
             case 'rescreen_completed' : $color = 'rgb(0,31,63)'; 
+                                break;
+            case 'rescreen_approved' : $color = 'rgb(210,214,222)';
                                 break;
         }
         
@@ -819,9 +1042,9 @@ public function new_siv() {
     
     
     //************STORE OFFICER**********************
-    
+    /*
     public function store_officer_approved_boms_list(){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
         $this->login();
         }
         $this->page_data['assembled_bom'] = $this->model_user->get_approved_assembled_bom();
@@ -829,11 +1052,11 @@ public function new_siv() {
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('user/store_officer_approved_bom_list_view',$this->page_data,TRUE);
-        $this->load->view('user/user_main_view',$this->page_data);
+        $notification_details = $this->model_user->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_user->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('user/user_main_view',$this->page_data);
     }
     
     public function store_officer_approved_bom_detail_view($bom_no){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
             $this->login();
         }
         $bom_details = $this->model_user->get_assembled_bom_details($bom_no);
@@ -854,7 +1077,7 @@ public function new_siv() {
     
     
     public function confirm_delivery(){
-        if(!$this->session->userdata('user_status')){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
         $this->login();
         }
         $delivered_quantity = $this->input->post('delivered_quantity');
@@ -879,36 +1102,49 @@ public function new_siv() {
     
     
     
-    
+    */
     
     //*************RESCREEN****************
     
     
     
     public function get_rescreens_for_user(){
-        
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
+            $this->login();
+        }
         $this->page_data['rescreens'] = $this->model_user->get_rescreens_for_user('PENDING_RESCREEN');
         if(isset($this->page_data['page_content'])){
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('user/user_pending_rescreens_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+        $this->page_data['notification_details'] = $notification_details;
+        $message_count = $this->model_user->get_message_count();
+        $this->page_data['message_count'] = $message_count;
         $this->load->view('user/user_main_view',$this->page_data);
         
     }
     
     public function perform_rescreen($rescreen_id){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
+            $this->login();
+        }
         $this->page_data['rescreen_data'] = $this->model_user->get_rescreen_data($rescreen_id); 
         if(isset($this->page_data['page_content'])){
             unset($this->page_data['page_content']);
         }
         $this->page_data["page_content"] = $this->load->view('user/user_perform_rescreen_view',$this->page_data,TRUE);
-        $this->load->view('user/user_main_view',$this->page_data);
+        $notification_details = $this->model_user->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_user->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('user/user_main_view',$this->page_data);
     }
     
     public function confirm_rescreen(){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
+            $this->login();
+        }
         $new_date_of_expiry = $this->input->post('date_of_expiry');
         $rescreen_id = $this->input->post('rescreen_id');
         if($this->model_user->conform_rescreen($new_date_of_expiry, $rescreen_id)){
+            $this->insert_into_calendar("Re-Screen_Completed" , date("Y-m-d") , 'rescreen_completed');
             redirect('user/print_success/Re-Screen_Confirmed_Successfully.');
         }
         else{
@@ -916,6 +1152,87 @@ public function new_siv() {
         }
     }
     
+    public function get_completed_rescreens(){
+        if(!$this->session->userdata('user_status')&&($this->session->userdata('user_type') == 'user')){
+            $this->login();
+        }
+        $this->page_data['rescreens'] = $this->model_user->get_completed_rescreens();
+        if(isset($this->page_data['page_content'])){
+            unset($this->page_data['page_content']);
+        }
+        $this->page_data["page_content"] = $this->load->view('user/user_completed_rescreens_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();
+            $this->page_data['notification_details'] = $notification_details;
+            $message_count = $this->model_user->get_message_count();
+            $this->page_data['message_count'] = $message_count;
+        $this->load->view('user/user_main_view',$this->page_data);
+    }
+    
+    
+    
+    //*************MESSAGES*****************
+    
+    
+    
+    public function message($receiver_name = null) {                        //new
+        $users = $this->model_user->get_all_user_names();
+        $this->page_data['user_names'] = $users;
+        
+       
+       if($this->input->post()) { 
+        $receiver_name = $this->input->post('receiver_name');
+        $sender_name = $this->session->userdata('user_name');
+        $message_details = $this->model_user->get_message_by_sender_name_receiver_name($sender_name, $receiver_name);
+        $this->page_data['message_details'] = $message_details;
+        
+       }
+       
+        else {
+        
+        if($receiver_name != null) {    
+        $sender_name = $this->session->userdata('user_name');
+        $message_details = $this->model_user->get_message_by_sender_name_receiver_name($sender_name, $receiver_name);
+        $this->page_data['message_details'] = $message_details;
+           
+       }
+        
+        else if($receiver_name == null) {
+        $users = $this->model_user->get_all_user_names();
+        $receiver_name = $users['0']['user_name'];     
+        $sender_name = $this->session->userdata('user_name');
+        $message_details = $this->model_user->get_message_by_sender_name_receiver_name($sender_name, $receiver_name);
+        $this->page_data['message_details'] = $message_details;
+       
+       }
+        
+           
+            
+       }
+        $notification_details = $this->model_user->get_message_notification_details();
+        $this->page_data['notification_details'] = $notification_details;
+        $message_count = $this->model_user->get_message_count();
+        $this->page_data['message_count'] = $message_count;
+        
+        $this->page_data['receiver_name'] = $receiver_name;
+    
+        if(isset($this->page_data['page_content'])){
+            unset($this->page_data['page_content']);
+        }
+        
+        $this->page_data["page_content"] = $this->load->view('user/user_message_view',$this->page_data,TRUE);
+        $notification_details = $this->model_user->get_message_notification_details();         $this->page_data['notification_details'] = $notification_details;         $message_count = $this->model_user->get_message_count();         $this->page_data['message_count'] = $message_count;         $this->load->view('user/user_main_view',$this->page_data);
+                 
+    }
+     
+
+        
+    public function add_message() {                                                         //new
+        $message = $this->input->post('message');
+        $receiver_name = $this->input->post('receiver_name');
+        $sender_name = $this->session->userdata('user_name');
+        $this->model_user->insert_message($sender_name, $receiver_name, $message);
+        $this->message($receiver_name);
+        }
     
     
 

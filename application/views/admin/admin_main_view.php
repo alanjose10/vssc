@@ -64,32 +64,38 @@
           <li class="dropdown messages-menu">                       <!-- Messages -->
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
               <i class="fa fa-envelope-o"></i>
-              <span class="label label-success">4</span>
+              <span class="label label-success"><?=$message_count?></span>
             </a>
             <ul class="dropdown-menu">
-              <li class="header">You have 4 messages</li>
-              <li>
-                <!-- inner menu: contains the actual data -->
+              <li class="header">You have <?=$message_count?> messages</li> 
+                <li>    
                 <ul class="menu">
-                  <li><!-- start message -->
-                    <a href="#">
-                      <div class="pull-left">
-                        <img src="<?php echo base_url();?>assets/dist/img/admin.jpg" class="img-circle" alt="Sender Image">
-                      </div>
-                      <h4>
-                        Sender Name
-                        <small><i class="fa fa-clock-o"></i> 2 mins</small>
-                      </h4>
-                      <p>Display message here!</p>
-                    </a>
-                  </li>
-                  <!-- end message -->
+                <?php
+                foreach($notification_details as $row)   {
+                print "<li><!-- start message -->\n";
+                print "<a href=\"#\">\n";
+                print "<div class=\"pull-left\">\n";
+                print "<img src=\"".base_url()."assets/dist/img/admin.jpg\" class=\"img-circle\" alt=\"Sender Image\" style=\"height: 20px\">\n";
+                print "</div>\n";
+                print "<h4>\n";
+                    echo "<option value=\"".$row['sender_name']."\">".$row['sender_name']."</option>\n";
+                print "<small><i class=\"fa fa-clock-o\"></i>\n";
+                    //echo "<option value=\"".$row['time']."\">".$row['time']."</option>\n";
+                print "</small>\n";
+                print "</h4>\n";
+                print "<p>\n";
+                    //echo "<option value=\"".$row['message']."\">".$row['message']."</option>\n";
+                print "</p>\n";
+
+                print "</a>\n";
+                print "</li>";
+                }
+                ?>
                 </ul>
-              </li>
-              <li class="footer"><a href="#">See All Messages</a></li>
+                </li>
+                <li class="footer"><a href="<?php echo base_url().'admin/message'; ?>">See All Messages</a></li>
             </ul>
           </li>
-
           <li class="dropdown user user-menu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
               <img src="<?php echo base_url();?>assets/dist/img/admin.jpg" class="user-image" alt="Admin Image">
@@ -194,8 +200,8 @@
           </a>
         </li>
         <li>
-          <a href="#">
-            <i class="fa fa-envelope"></i> <span>Messages #</span>
+          <a href="<?php echo base_url().'admin/message'; ?>">
+            <i class="fa fa-envelope"></i> <span>Messages</span>
           </a>
         </li>
           <li>

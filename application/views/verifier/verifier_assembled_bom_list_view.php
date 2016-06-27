@@ -24,7 +24,7 @@
                     <div class="box-body no-padding table-responsive">
                         <table class="table table-hover table-bordered">
                             <thead>
-                            <tr class="bg-blue">
+                            <tr class="bg-gray">
                                 <th>Entry No.</th>
                                 <th>BOM Name</th>
                                 <th>BOM Model Grade</th>
@@ -53,6 +53,8 @@
                                                                 break;
                                         case 'APPROVED' :echo "<td><span class=\"label label-success\">".$row['bom_status']."</span></td>\n";
                                                                 break;
+                                        case 'DELIVERED' :echo "<td><span class=\"label label-info\">".$row['bom_status']."</span></td>\n";
+                                                            break;
                                     }
                                     echo "\n</tr>";
                                 }

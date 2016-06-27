@@ -99,16 +99,10 @@
           <a href="<?php echo base_url().'verifier/print_siv/'.$siv_details['siv_no']; ?>" target="_blank" class="btn btn-default"><i class="fa fa-print"></i> Print</a>
         </div>
         <div class="col-xs-3 col-xs-offset-1">
-          <a href="<?php echo base_url().'verifier/siv_save_as_excel/'.$siv_details['siv_no']; ?>" class="btn btn-default btn-primary"><i class="fa fa-file-excel-o"></i> Save As Excel(not working)</a>
+          <a href="<?php echo base_url().'verifier/siv_save_as_excel/'.$siv_details['siv_no']; ?>" class="btn btn-default btn-primary"><i class="fa fa-file-excel-o"></i> Save As Excel</a>
             
         </div>
-        <?php
-            if(strcmp($siv_details['siv_status'],'PENDING_APPROVAL') == 0){
-                echo "<div class=\"col-xs-3 \">\n"; 
-                echo "<a href=\"".base_url().'verifier/delete_issued_siv/'.$siv_details['siv_no']."\" class=\"btn btn-danger pull-right\"><i class=\"fa fa-delete\"></i> Delete</a>\n"; 
-                echo "                    </div>\n";   
-            }    
-        ?>
+        
       </div>
         <br><br>
         <?php

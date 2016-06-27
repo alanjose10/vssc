@@ -24,7 +24,7 @@
                     <div class="box-body no-padding table-responsive">
                         <table class="table table-hover table-bordered">
                             <thead>
-                            <tr class="bg-blue">
+                            <tr class="bg-gray">
                                 <th>Entry No.</th>
                                 <th>BOM Name</th>
                                 <th>BOM Model Grade</th>

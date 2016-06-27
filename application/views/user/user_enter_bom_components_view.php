@@ -117,7 +117,9 @@
                                                             "id" => "required_quantity",
                                                             "name" => "required_quantity[]",
                                                             "placeholder" => $row['component_quantity'],
-                                                            "value" => $row['component_quantity']
+                                                            "value" => $row['component_quantity'],
+                                                            "max" => $row['component_quantity'],
+                                                            "min" => 0
                                                             ));
                                         echo "</div>";
                                         echo "</td>";
